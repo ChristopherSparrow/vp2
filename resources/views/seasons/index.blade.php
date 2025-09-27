@@ -11,7 +11,9 @@
         <div class="mb-4 text-green-600">{{ session('success') }}</div>
     @endif
 
-    <table class="min-w-full bg-white">
+
+    <div class="overflow-x-auto border border-white-300">
+        <table class="min-w-full w-full">
         <thead>
             <tr>
                 <th class="px-4 py-2">Name</th>
@@ -35,18 +37,21 @@
                     @endif
                 </td>
                 <td class="px-4 py-2">
-                    <a href="{{ route('seasons.show', $season) }}" class="text-blue-600">View</a>
-                    <a href="{{ route('seasons.edit', $season) }}" class="ml-2 text-yellow-600">Edit</a>
-                    <form action="{{ route('seasons.destroy', $season) }}" method="POST" class="inline">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="ml-2 text-red-600">Delete</button>
-                    </form>
+                    <div class="flex items-center space-x-3">
+                        <a href="{{ route('seasons.show', $season) }}" class="text-blue-600">View</a>
+                        <a href="{{ route('seasons.edit', $season) }}" class="text-yellow-600">Edit</a>
+                        <form action="{{ route('seasons.destroy', $season) }}" method="POST" class="inline-flex">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="text-red-600">Delete</button>
+                        </form>
+                    </div>
                 </td>
             </tr>
         @endforeach
         </tbody>
-    </table>
+        </table>
+    </div>
 
     <div class="mt-4">
         {{ $seasons->links() }}

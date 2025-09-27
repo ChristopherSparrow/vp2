@@ -5,9 +5,12 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>{{ config('app.name', 'Laravel') }}</title>
 
-        {{-- Load Vite-built assets when available, otherwise rely on compiled CSS/JS in project --}}
+        {{-- Load Vite-built assets when available, otherwise fall back to a prebuilt CSS file if present. --}}
         @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
             @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @elseif (file_exists(public_path('css/app.css')))
+            {{-- Fallback to a prebuilt stylesheet in public/css/app.css when present (created by `npm run build`). --}}
+            <link rel="stylesheet" href="{{ asset('css/app.css') }}">
         @endif
     </head>
     <body class="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
@@ -25,6 +28,13 @@
                         <div class="flex items-center gap-3">
                             @auth
                                 <a href="{{ url('/dashboard') }}" class="text-sm px-3 py-1 rounded bg-gray-100 dark:bg-gray-700">Dashboard</a>
+                                <!-- include user name here -->
+                                <span class="text-sm">{{ Auth::user()->name }}</span>
+                                <!-- include log out link here -->
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="text-sm px-3 py-1 border rounded">Log out</button>
+                                </form>
                             @else
                                 <a href="{{ route('login') }}" class="text-sm px-3 py-1">Log in</a>
 
