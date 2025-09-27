@@ -10,6 +10,7 @@ Route::get('/', function () {
 });
 
 Route::resource('seasons', SeasonController::class);
+Route::resource('teams', App\Http\Controllers\TeamController::class);
 
 // Authentication routes
 Route::get('register', [AuthController::class, 'showRegister'])->name('register');

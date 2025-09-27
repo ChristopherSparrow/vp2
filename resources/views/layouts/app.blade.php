@@ -20,6 +20,20 @@
                     <a href="{{ url('/') }}" class="font-semibold text-lg">{{ config('app.name', 'Laravel') }}</a>
                     <nav class="hidden sm:flex items-center gap-4">
                         <a href="{{ url('/seasons') }}" class="text-sm hover:underline">Seasons</a>
+                        @php
+                            $currentSeason = null;
+                            try {
+                                if (\Illuminate\Support\Facades\Schema::hasTable('seasons')) {
+                                    $currentSeason = \App\Models\Season::where('current', true)->first();
+                                }
+                            } catch (\Exception $e) {
+                                // If Schema isn't available or DB not migrated (tests), just ignore
+                                $currentSeason = null;
+                            }
+                        @endphp
+                        @if($currentSeason)
+                            <a href="{{ route('seasons.show', $currentSeason) }}" class="text-sm px-3 py-1 bg-green-600 text-white rounded">Current Season</a>
+                        @endif
                     </nav>
                 </div>
 
@@ -56,6 +70,22 @@
             <div class="flex gap-3">
                 <a href="{{ url('/') }}" class="px-4 py-2 border rounded">Home</a> | 
                 <a href="{{ route('seasons.index') }}" class="px-4 py-2 bg-blue-600 text-white rounded">View Seasons</a>
+
+                @php
+                    $currentSeason = null;
+                    try {
+                        if (\Illuminate\Support\Facades\Schema::hasTable('seasons')) {
+                            $currentSeason = \App\Models\Season::where('current', true)->first();
+                        }
+                    } catch (\Exception $e) {
+                        // If Schema isn't available or DB not migrated (tests), just ignore
+                        $currentSeason = null;
+                    }
+                @endphp
+                @if($currentSeason)
+                    <a href="{{ route('seasons.show', $currentSeason) }}" class="px-4 py-2 bg-blue-600 text-white rounded"">Current Season</a>
+                @endif
+
             </div>
             <div class="flex justify-between items-center">
                 <div>&copy; {{ date('Y') }} {{ config('app.name', 'Laravel') }}</div>

@@ -49,4 +49,12 @@ class Season extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * A season has many teams.
+     */
+    public function teams()
+    {
+        return $this->hasMany(Team::class);
+    }
 }

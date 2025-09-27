@@ -55,6 +55,11 @@ class SeasonController extends Controller
     /** Display the specified season. */
     public function show(Season $season)
     {
+        // eager-load teams ordered by name for display
+        $season->load(['teams' => function ($q) {
+            $q->orderBy('name');
+        }]);
+
         return view('seasons.show', compact('season'));
     }
 
