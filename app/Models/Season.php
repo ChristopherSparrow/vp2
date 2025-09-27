@@ -34,6 +34,7 @@ class Season extends Model
         'name',
         'start_date',
         'end_date',
+        'current',
     ];
 
     /**
@@ -44,6 +45,7 @@ class Season extends Model
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
+        'current' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

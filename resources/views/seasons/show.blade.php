@@ -10,6 +10,9 @@
 
         <dt class="font-semibold">End Date</dt>
         <dd class="mb-2">{{ $season->end_date->toDateString() }}</dd>
+
+        <dt class="font-semibold">Current</dt>
+        <dd class="mb-2">{{ $season->current ? 'Yes' : 'No' }}</dd>
     </dl>
 
     <div class="mt-4">

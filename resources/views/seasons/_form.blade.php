@@ -20,4 +20,10 @@
         <label class="block font-medium">End Date</label>
         <input type="date" name="end_date" value="{{ $end }}" class="form-input mt-1 block w-full" required />
     </div>
+
+    <div class="flex items-center space-x-2">
+        <input type="hidden" name="current" value="0">
+        <input id="current" type="checkbox" name="current" value="1" {{ old('current', isset($season) ? ($season->current ? 'checked' : '') : '') == '1' ? 'checked' : '' }} class="form-checkbox" />
+        <label for="current" class="font-medium">Current</label>
+    </div>
 </div>

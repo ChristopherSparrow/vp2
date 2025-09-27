@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Season;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class SeasonController extends Controller
 {
@@ -28,14 +29,25 @@ class SeasonController extends Controller
             'name' => 'required|string|max:255|unique:seasons,name',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
+            'current' => 'sometimes|boolean',
         ]);
 
         // generate ULID if model expects non-incrementing string id
-        $season = new Season($data);
-        if (empty($season->getKey())) {
-            $season->{$season->getKeyName()} = (string) Str::ulid();
-        }
-        $season->save();
+        // ensure boolean value is present (checkboxes submit 'on' or null)
+        $data['current'] = !empty($data['current']) ? true : false;
+
+        // Use transaction: if setting current, clear others first
+        DB::transaction(function () use ($data, &$season) {
+            if (!empty($data['current'])) {
+                Season::where('current', true)->update(['current' => false]);
+            }
+
+            $season = new Season($data);
+            if (empty($season->getKey())) {
+                $season->{$season->getKeyName()} = (string) Str::ulid();
+            }
+            $season->save();
+        });
 
         return redirect()->route('seasons.index')->with('success', 'Season created.');
     }
@@ -59,9 +71,18 @@ class SeasonController extends Controller
             'name' => 'required|string|max:255|unique:seasons,name,' . $season->getKey(),
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
+            'current' => 'sometimes|boolean',
         ]);
 
-        $season->update($data);
+        $data['current'] = !empty($data['current']) ? true : false;
+
+        DB::transaction(function () use ($data, $season) {
+            if (!empty($data['current'])) {
+                Season::where('current', true)->where('id', '!=', $season->getKey())->update(['current' => false]);
+            }
+
+            $season->update($data);
+        });
 
         return redirect()->route('seasons.index')->with('success', 'Season updated.');
     }

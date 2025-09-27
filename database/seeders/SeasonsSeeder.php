@@ -22,6 +22,7 @@ class SeasonsSeeder extends Seeder
                 'name' => 'Summer 2026',
                 'start_date' => '2026-06-01',
                 'end_date' => '2026-08-31',
+                'current' => true,
             ],
             [
                 'name' => 'Fall 2026',

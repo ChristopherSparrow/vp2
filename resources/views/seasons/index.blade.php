@@ -17,6 +17,7 @@
                 <th class="px-4 py-2">Name</th>
                 <th class="px-4 py-2">Start Date</th>
                 <th class="px-4 py-2">End Date</th>
+                <th class="px-4 py-2">Current</th>
                 <th class="px-4 py-2">Actions</th>
             </tr>
         </thead>
@@ -26,6 +27,13 @@
                 <td class="px-4 py-2">{{ $season->name }}</td>
                 <td class="px-4 py-2">{{ $season->start_date->toDateString() }}</td>
                 <td class="px-4 py-2">{{ $season->end_date->toDateString() }}</td>
+                <td class="px-4 py-2">
+                    @if($season->current)
+                        <span class="text-green-600 font-semibold">Yes</span>
+                    @else
+                        <span class="text-gray-600">No</span>
+                    @endif
+                </td>
                 <td class="px-4 py-2">
                     <a href="{{ route('seasons.show', $season) }}" class="text-blue-600">View</a>
                     <a href="{{ route('seasons.edit', $season) }}" class="ml-2 text-yellow-600">Edit</a>
