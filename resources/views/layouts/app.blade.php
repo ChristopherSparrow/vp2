@@ -1,47 +1,45 @@
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
+
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>{{ config('app.name', 'Laravel') }}</title>
-
-        {{-- Load Vite-built assets when available, otherwise fall back to a prebuilt CSS file if present. --}}
-        @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
-            @vite(['resources/css/app.css', 'resources/js/app.js'])
-        @elseif (file_exists(public_path('css/app.css')))
-            {{-- Fallback to a prebuilt stylesheet in public/css/app.css when present (created by `npm run build`). --}}
-            <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+        @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))@vite(['resources/css/app.css', 'resources/js/app.js'])
+        @elseif (file_exists(public_path('css/app.css')))<link rel="stylesheet" href="{{ asset('css/app.css') }}">
         @endif
+
     </head>
-    <body class="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-        <header class="bg-white dark:bg-gray-800 border-b">
+
+    
+    <body class="min-h-screen bg-gray-50 text-gray-900 ">
+        <header class="bg-white  border-b">
             <div class="container mx-auto px-4 py-3 flex items-center justify-between">
                 <div class="flex items-center gap-6">
                     <a href="{{ url('/') }}" class="font-semibold text-lg">{{ config('app.name', 'Laravel') }}</a>
-                    <nav class="hidden sm:flex items-center gap-4">
-                        <a href="{{ url('/seasons') }}" class="text-sm hover:underline">Seasons</a>
-                        @php
-                            $currentSeason = null;
-                            try {
-                                if (\Illuminate\Support\Facades\Schema::hasTable('seasons')) {
-                                    $currentSeason = \App\Models\Season::where('current', true)->first();
-                                }
-                            } catch (\Exception $e) {
-                                // If Schema isn't available or DB not migrated (tests), just ignore
+                        <nav class="hidden sm:flex items-center gap-4">
+                            <a href="{{ url('/seasons') }}" class="text-sm hover:underline">Seasons</a>
+                            @php
                                 $currentSeason = null;
-                            }
-                        @endphp
-                        @if($currentSeason)
-                            <a href="{{ route('seasons.show', $currentSeason) }}" class="text-sm px-3 py-1 bg-green-600 text-white rounded">Current Season</a>
-                        @endif
-                    </nav>
+                                try {
+                                    if (\Illuminate\Support\Facades\Schema::hasTable('seasons')) {
+                                        $currentSeason = \App\Models\Season::where('current', true)->first();
+                                    }
+                                } catch (\Exception $e) {
+                                    // If Schema isn't available or DB not migrated (tests), just ignore
+                                    $currentSeason = null;
+                                }
+                            @endphp
+                            @if($currentSeason)<a href="{{ route('seasons.show', $currentSeason) }}" class="text-sm px-3 py-1 bg-green-600 text-white rounded">Current Season</a>
+                            @endif
+                        </nav>
                 </div>
 
                 <div>
                     @if (Route::has('login'))
                         <div class="flex items-center gap-3">
                             @auth
-                                <a href="{{ url('/dashboard') }}" class="text-sm px-3 py-1 rounded bg-gray-100 dark:bg-gray-700">Dashboard</a>
+                                <a href="{{ url('/dashboard') }}" class="text-sm px-3 py-1 rounded bg-gray-100">Dashboard</a>
                                 <!-- include user name here -->
                                 <span class="text-sm">{{ Auth::user()->name }}</span>
                                 <!-- include log out link here -->

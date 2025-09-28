@@ -4,13 +4,14 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SeasonController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\TeamController;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
 Route::resource('seasons', SeasonController::class);
-Route::resource('teams', App\Http\Controllers\TeamController::class);
+Route::resource('teams', TeamController::class);
 
 // Authentication routes
 Route::get('register', [AuthController::class, 'showRegister'])->name('register');
