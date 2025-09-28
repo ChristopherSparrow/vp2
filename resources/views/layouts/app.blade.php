@@ -17,22 +17,7 @@
             <div class="container mx-auto px-4 py-3 flex items-center justify-between">
                 <div class="flex items-center gap-6">
                     <a href="{{ url('/') }}" class="font-semibold text-lg">{{ config('app.name', 'Laravel') }}</a>
-                        <nav class="hidden sm:flex items-center gap-4">
-                            <a href="{{ url('/seasons') }}" class="text-sm hover:underline">Seasons</a>
-                            @php
-                                $currentSeason = null;
-                                try {
-                                    if (\Illuminate\Support\Facades\Schema::hasTable('seasons')) {
-                                        $currentSeason = \App\Models\Season::where('current', true)->first();
-                                    }
-                                } catch (\Exception $e) {
-                                    // If Schema isn't available or DB not migrated (tests), just ignore
-                                    $currentSeason = null;
-                                }
-                            @endphp
-                            @if($currentSeason)<a href="{{ route('seasons.show', $currentSeason) }}" class="text-sm px-3 py-1 bg-green-600 text-white rounded">Current Season</a>
-                            @endif
-                        </nav>
+
                 </div>
 
                 <div>
@@ -40,16 +25,13 @@
                         <div class="flex items-center gap-3">
                             @auth
                                 <a href="{{ url('/dashboard') }}" class="text-sm px-3 py-1 rounded bg-gray-100">Dashboard</a>
-                                <!-- include user name here -->
                                 <span class="text-sm">{{ Auth::user()->name }}</span>
-                                <!-- include log out link here -->
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
                                     <button type="submit" class="text-sm px-3 py-1 border rounded">Log out</button>
                                 </form>
                             @else
                                 <a href="{{ route('login') }}" class="text-sm px-3 py-1">Log in</a>
-
                                 @if (Route::has('register'))
                                     <a href="{{ route('register') }}" class="text-sm px-3 py-1 border rounded">Register</a>
                                 @endif
@@ -68,6 +50,7 @@
             <div class="flex gap-3">
                 <a href="{{ url('/') }}" class="px-4 py-2 border rounded">Home</a> | 
                 <a href="{{ route('seasons.index') }}" class="px-4 py-2 bg-blue-600 text-white rounded">View Seasons</a>
+                <a href="{{ route('teams.index') }}" class="px-4 py-2 bg-blue-600 text-white rounded">View Teams</a>
                 <a href="{{ route('players.index') }}" class="px-4 py-2 bg-blue-600 text-white rounded">View Players</a>
 
                 @php

@@ -32,7 +32,6 @@
                         <tr>
                             <th class="px-4 py-2">Name</th>
                             <th class="px-4 py-2">Location</th>
-                            <th class="px-4 py-2">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -40,16 +39,45 @@
                         <tr class="border-t">
                             <td class="px-4 py-2">{{ $team->name }}</td>
                             <td class="px-4 py-2">{{ $team->location }}</td>
-                            <td class="px-4 py-2">
-                                <div class="flex items-center space-x-3">
-                                    <a href="{{ route('teams.show', $team) }}" class="text-blue-600">View</a>
-                                    <a href="{{ route('teams.edit', $team) }}" class="text-yellow-600">Edit</a>
-                                    <form action="{{ route('teams.destroy', $team) }}" method="POST" class="inline-flex">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-red-600">Delete</button>
-                                    </form>
-                                </div>
+                        </tr>
+                        <tr class="bg-gray-50">
+                            <td colspan="2" class="px-4 py-3">
+
+                                @php
+                                    // Prefer playerTeams so we can inspect soft deletes on the pivot records.
+                                    if ($team->relationLoaded('playerTeams')) {
+                                        $activeAssignments = $team->playerTeams->whereNull('deleted_at');
+                                    } else {
+                                        // if not loaded, query only non-deleted playerTeams
+                                        $activeAssignments = $team->playerTeams()->whereNull('deleted_at')->with('player')->get();
+                                    }
+                                @endphp
+
+                                @if($activeAssignments->isEmpty())
+                                    <div class="text-gray-600">No players for this team.</div>
+                                @else
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full w-full text-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th class="px-3 py-2 text-left">Name</th>
+                                                    <th class="px-3 py-2 text-left">Position</th>
+                                                    <th class="px-3 py-2 text-left">Number</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($activeAssignments as $assign)
+                                                    @php $player = $assign->player ?? $assign; @endphp
+                                                    <tr class="border-t">
+                                                        <td class="px-3 py-2">{{ $player->name }}</td>
+                                                        <td class="px-3 py-2">{{ $player->position ?? '' }}</td>
+                                                        <td class="px-3 py-2">{{ $player->number ?? '' }}</td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @endif
                             </td>
                         </tr>
                     @endforeach
