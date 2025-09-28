@@ -7,33 +7,44 @@
         <a href="{{ route('games.create') }}" class="btn">New Game</a>
     </div>
 
-    <table class="min-w-full bg-white">
-        <thead>
-            <tr>
-                <th>Competition</th>
-                <th>Home</th>
-                <th>Away</th>
-                <th>Score</th>
-                <th>Date</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($games as $game)
-            <tr>
-                <td>{{ $game->competition->name ?? '—' }}</td>
-                <td>{{ $game->homeTeam->name ?? $game->homePlayer->name ?? '—' }}</td>
-                <td>{{ $game->awayTeam->name ?? $game->awayPlayer->name ?? '—' }}</td>
-                <td>{{ $game->home_score ?? '—' }} - {{ $game->away_score ?? '—' }}</td>
-                <td>{{ optional($game->date)->toDateString() ?? '—' }}</td>
-                <td>
-                    <a href="{{ route('games.show', $game) }}">View</a>
-                    <a href="{{ route('games.edit', $game) }}" class="ml-2">Edit</a>
-                </td>
-            </tr>
+    @if(isset($groupedGames) && $groupedGames->isNotEmpty())
+        @foreach($groupedGames as $seasonName => $competitions)
+            <h2 class="text-xl font-semibold mt-6">{{ $seasonName }}</h2>
+
+            @foreach($competitions as $competitionName => $compGames)
+                <h3 class="text-lg font-medium mt-4">{{ $competitionName }}</h3>
+
+                <table class="min-w-full bg-white border border-gray-300">
+
+                    <tbody>
+                        @foreach($compGames as $game)
+                        <tr>
+                            <td colspan="3" class="border border-gray-300 px-2 py-1">{{ optional($game->date)->format('j/m/Y') ?? '—' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-gray-300 px-2 py-1">
+                            {{ $game->homeTeam->name ?? $game->homePlayer->name ?? '—' }}<br>
+                            {{ $game->awayTeam->name ?? $game->awayPlayer->name ?? '—' }}
+                            </td>
+                            <td class="border border-gray-300 px-2 py-1">
+                            {{ $game->home_score ?? '' }}<br>
+                            {{ $game->away_score ?? '' }}
+                            </td>
+
+
+
+                            <td class="border border-gray-300 px-2 py-1">
+                                <a href="{{ route('games.edit', $game) }}" class="ml-2">Edit</a>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             @endforeach
-        </tbody>
-    </table>
+        @endforeach
+    @else
+        <p class="mt-4">No games found.</p>
+    @endif
 
     <div class="mt-4">{{ $games->links() }}</div>
 </div>

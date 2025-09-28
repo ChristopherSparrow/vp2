@@ -35,8 +35,23 @@ class GameController extends Controller
             return view('competitions.games.index', compact('competition', 'season', 'games'));
         }
 
-        $games = Game::with(['competition', 'homeTeam', 'awayTeam', 'homePlayer', 'awayPlayer'])->latest('date')->paginate(20);
-        return view('games.index', compact('games'));
+        $games = Game::with(['competition.season', 'homeTeam', 'awayTeam', 'homePlayer', 'awayPlayer'])->latest('date')->paginate(20);
+
+        // Prepare grouped structure for the view: seasons => competitions => collection of games
+        $collection = $games->getCollection();
+        $groupedBySeason = $collection->groupBy(function ($g) {
+            return optional($g->competition->season)->name ?? 'Unassigned Season';
+        })->map(function ($seasonGames) {
+            return $seasonGames->groupBy(function ($g) {
+                return $g->competition->name ?? '—';
+            });
+        });
+
+        // Pass grouped data and the paginator (for links)
+        return view('games.index', [
+            'games' => $games,
+            'groupedGames' => $groupedBySeason,
+        ]);
     }
 
     public function create()
