@@ -12,17 +12,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Add new location column
-        Schema::table('teams', function (Blueprint $table) {
-            $table->string('location')->nullable()->after('name');
-        });
+        // Add new location column if it doesn't already exist
+        if (!Schema::hasColumn('teams', 'location')) {
+            Schema::table('teams', function (Blueprint $table) {
+                $table->string('location')->nullable()->after('name');
+            });
 
-        // Populate location from city/state/country where present
-        DB::table('teams')->get()->each(function ($team) {
-            $parts = array_filter([$team->city ?? null, $team->state ?? null, $team->country ?? null]);
-            $location = $parts ? implode(', ', $parts) : null;
-            DB::table('teams')->where('id', $team->id)->update(['location' => $location]);
-        });
+            // Populate location from city/state/country where present
+            DB::table('teams')->get()->each(function ($team) {
+                $parts = array_filter([$team->city ?? null, $team->state ?? null, $team->country ?? null]);
+                $location = $parts ? implode(', ', $parts) : null;
+                DB::table('teams')->where('id', $team->id)->update(['location' => $location]);
+            });
+        }
 
         // Try dropping old columns; some platforms (sqlite without dbal) may fail
         try {

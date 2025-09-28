@@ -31,4 +31,22 @@ class Team extends Model
     {
         return $this->belongsTo(Season::class);
     }
+
+    /**
+     * PlayerTeam records for this team.
+     */
+    public function playerTeams()
+    {
+        return $this->hasMany(PlayerTeam::class);
+    }
+
+    /**
+     * Players that have been associated with this team.
+     */
+    public function players()
+    {
+        return $this->belongsToMany(Player::class, 'player_teams', 'team_id', 'player_id')
+            ->withPivot(['start_date', 'end_date'])
+            ->withTimestamps();
+    }
 }

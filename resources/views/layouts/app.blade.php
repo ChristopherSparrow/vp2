@@ -68,6 +68,7 @@
             <div class="flex gap-3">
                 <a href="{{ url('/') }}" class="px-4 py-2 border rounded">Home</a> | 
                 <a href="{{ route('seasons.index') }}" class="px-4 py-2 bg-blue-600 text-white rounded">View Seasons</a>
+                <a href="{{ route('players.index') }}" class="px-4 py-2 bg-blue-600 text-white rounded">View Players</a>
 
                 @php
                     $currentSeason = null;

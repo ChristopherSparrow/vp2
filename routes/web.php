@@ -5,6 +5,7 @@ use App\Http\Controllers\SeasonController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TeamController;
+use App\Http\Controllers\PlayerController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -12,6 +13,7 @@ Route::get('/', function () {
 
 Route::resource('seasons', SeasonController::class);
 Route::resource('teams', TeamController::class);
+Route::resource('players', PlayerController::class);
 
 // Authentication routes
 Route::get('register', [AuthController::class, 'showRegister'])->name('register');
