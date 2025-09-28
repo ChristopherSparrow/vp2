@@ -14,6 +14,7 @@ Route::get('/', function () {
 Route::resource('seasons', SeasonController::class);
 Route::resource('teams', TeamController::class);
 Route::resource('players', PlayerController::class);
+Route::resource('competitions', \App\Http\Controllers\CompetitionController::class);
 
 // Authentication routes
 Route::get('register', [AuthController::class, 'showRegister'])->name('register');

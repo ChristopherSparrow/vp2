@@ -5,10 +5,23 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
-class Season extends Model
+class Competition extends Model
 {
     use HasFactory, SoftDeletes;
+
+    /**
+     * Ensure a ULID is generated for non-incrementing string primary keys.
+     */
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (empty($model->getKey())) {
+                $model->{$model->getKeyName()} = (string) Str::ulid();
+            }
+        });
+    }
 
     /**
      * The primary key type.
@@ -31,10 +44,9 @@ class Season extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'season_id',
         'name',
-        'start_date',
-        'end_date',
-        'current',
+        'type',
     ];
 
     /**
@@ -43,26 +55,15 @@ class Season extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'start_date' => 'date',
-        'end_date' => 'date',
-        'current' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
 
     /**
-     * A season has many teams.
+     * A competition belongs to a season.
      */
-    public function teams()
+    public function season()
     {
-        return $this->hasMany(Team::class);
-    }
-
-    /**
-     * A season has many competitions.
-     */
-    public function competitions()
-    {
-        return $this->hasMany(Competition::class);
+        return $this->belongsTo(Season::class);
     }
 }
