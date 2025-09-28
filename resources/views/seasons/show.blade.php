@@ -39,19 +39,32 @@
                                 <h3 class="text-lg font-semibold">{{ $competition->name }}</h3>
                             </div>
                         </div>
-<!-- include in here the games that belond to this competition and season -->
+
                         <div class="mt-2">
                    
                             @php
-                                // Load games for this competition. There is no `season_id` on games table;
-                                // games are already scoped to a competition. Order by date for display.
+                                // Per-competition pagination: show 3 games per page.
+                                $perPage = 3;
+                                $pageName = 'page_' . $competition->id;
+
                                 if ($competition->relationLoaded('games')) {
-                                    $games = $competition->games->sortBy('date');
+                                    // If games are preloaded as a collection, sort and manually paginate.
+                                    $collection = $competition->games->sortBy('date')->values();
+                                    $currentPage = \Illuminate\Pagination\Paginator::resolveCurrentPage($pageName);
+                                    $items = $collection->forPage($currentPage, $perPage);
+                                    $games = new \Illuminate\Pagination\LengthAwarePaginator(
+                                        $items,
+                                        $collection->count(),
+                                        $perPage,
+                                        $currentPage,
+                                        ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(), 'pageName' => $pageName]
+                                    );
                                 } else {
-                                    $games = $competition->games()->orderBy('date')->get();
+                                    // When not preloaded, use query pagination with a unique page name per competition.
+                                    $games = $competition->games()->orderBy('date')->paginate($perPage, ['*'], $pageName);
                                 }
                             @endphp
-                            @if($games->isEmpty())
+                            @if($games->total() == 0)
                                 <div class="text-gray-600">No games for this competition in this season.</div>
                             @else
                                 <div>
@@ -70,6 +83,40 @@
                                           
                                         </div>
                                     @endforeach
+
+                                    {{-- Pagination links for this competition --}}
+                                    <div class="mt-2">
+                                        @if($games->lastPage() > 1)
+                                            <nav class="flex items-center justify-center space-x-2" role="navigation" aria-label="Pagination Navigation">
+                                                {{-- Previous Page Link --}}
+                                                @if($games->onFirstPage())
+                                                    <span class="px-3 py-1 rounded bg-gray-100 text-gray-400 text-sm">&laquo;</span>
+                                                @else
+                                                    <a href="{{ $games->previousPageUrl() }}" class="px-3 py-1 rounded bg-white border text-sm hover:bg-gray-50">&laquo;</a>
+                                                @endif
+
+                                                {{-- Pagination Elements --}}
+                                                @php
+                                                    $start = max(1, $games->currentPage() - 2);
+                                                    $end = min($games->lastPage(), $games->currentPage() + 2);
+                                                @endphp
+                                                @for($i = $start; $i <= $end; $i++)
+                                                    @if($i == $games->currentPage())
+                                                        <span aria-current="page" class="px-3 py-1 rounded bg-green-600 text-white text-sm">{{ $i }}</span>
+                                                    @else
+                                                        <a href="{{ $games->url($i) }}" class="px-3 py-1 rounded bg-white border text-sm hover:bg-gray-50">{{ $i }}</a>
+                                                    @endif
+                                                @endfor
+
+                                                {{-- Next Page Link --}}
+                                                @if($games->hasMorePages())
+                                                    <a href="{{ $games->nextPageUrl() }}" class="px-3 py-1 rounded bg-white border text-sm hover:bg-gray-50">&raquo;</a>
+                                                @else
+                                                    <span class="px-3 py-1 rounded bg-gray-100 text-gray-400 text-sm">&raquo;</span>
+                                                @endif
+                                            </nav>
+                                        @endif
+                                    </div>
                                 </div>
                             @endif
                         </div>
