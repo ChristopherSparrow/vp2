@@ -66,4 +66,12 @@ class Competition extends Model
     {
         return $this->belongsTo(Season::class);
     }
+
+    /**
+     * Games that belong to this competition.
+     */
+    public function games()
+    {
+        return $this->hasMany(Game::class);
+    }
 }

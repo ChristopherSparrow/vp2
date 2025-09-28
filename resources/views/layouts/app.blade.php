@@ -53,6 +53,7 @@
                 <a href="{{ route('teams.index') }}" class="px-4 py-2 bg-blue-600 text-white rounded">View Teams</a>
                 <a href="{{ route('players.index') }}" class="px-4 py-2 bg-blue-600 text-white rounded">View Players</a>
                 <a href="{{ route('competitions.index') }}" class="px-4 py-2 bg-blue-600 text-white rounded">View Competitions</a>
+                <a href="{{ route('games.index') }}" class="px-4 py-2 bg-blue-600 text-white rounded">View Games</a>
 
                 @php
                     $currentSeason = null;

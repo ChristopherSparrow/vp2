@@ -37,14 +37,41 @@
                         <div class="flex justify-between items-start">
                             <div>
                                 <h3 class="text-lg font-semibold">{{ $competition->name }}</h3>
-                                <p class="text-sm text-gray-600">Type: {{ ucfirst(str_replace('_', ' ', $competition->type)) }}</p>
                             </div>
-                            <div class="text-sm text-gray-500">{{ $competition->created_at?->toDateString() }}</div>
                         </div>
+<!-- include in here the games that belond to this competition and season -->
+                        <div class="mt-2">
+                   
+                            @php
+                                // Load games for this competition. There is no `season_id` on games table;
+                                // games are already scoped to a competition. Order by date for display.
+                                if ($competition->relationLoaded('games')) {
+                                    $games = $competition->games->sortBy('date');
+                                } else {
+                                    $games = $competition->games()->orderBy('date')->get();
+                                }
+                            @endphp
+                            @if($games->isEmpty())
+                                <div class="text-gray-600">No games for this competition in this season.</div>
+                            @else
+                                <div>
+                                    @foreach($games as $game)
+                                        <div class="border rounded mb-2 p-2 bg-gray-50">
+                                            <!-- Include the date of the Game here -->
+                                            <div class="text-xs text-gray-500">{{ $game->date?->toDateString() }} (Optional Round Text to be built)</div>
+                                            <div class="flex items-center justify-between">
+                                                <span class="font-medium">
+                                                    {{ $game->homeTeam->name ?? $game->homePlayer->name ?? '—' }} ({{ $game->home_score ?? '—' }})
+                                                    <br>
+                                                    {{ $game->awayTeam->name ?? $game->awayPlayer->name ?? '—' }} ({{ $game->away_score ?? '—' }}) 
+                                                </span>
 
-                        <div class="mt-3">
-                            <a href="{{ route('competitions.show', $competition) }}" class="text-blue-600">View</a>
-                            <a href="{{ route('competitions.edit', $competition) }}" class="ml-3 text-yellow-600">Edit</a>
+                                            </div>
+                                          
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
                         </div>
                     </div>
                 @endforeach
