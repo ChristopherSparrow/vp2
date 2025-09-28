@@ -23,10 +23,23 @@
     </div>
 
     <div>
+        <label>Season</label>
+        <select name="season_id" class="form-input">
+            <option value="">Select</option>
+            @if(isset($seasons))
+                @foreach($seasons as $s)
+                    <option value="{{ $s->id }}" {{ (string)($values['season_id'] ?? ($currentSeason->id ?? '')) === (string)$s->id ? 'selected' : '' }}>{{ $s->name }}</option>
+                @endforeach
+            @endif
+        </select>
+    </div>
+
+    <div>
         <label>Home Team</label>
         <select name="home_team_id" class="form-input">
             <option value="">--</option>
-            @foreach($teams as $t)
+            @php $teamList = $seasonTeams ?? $teams ?? collect(); @endphp
+            @foreach($teamList as $t)
                 <option value="{{ $t->id }}" {{ (string)($values['home_team_id'] ?? '') === (string)$t->id ? 'selected' : '' }}>{{ $t->name }}</option>
             @endforeach
         </select>
@@ -36,7 +49,7 @@
         <label>Away Team</label>
         <select name="away_team_id" class="form-input">
             <option value="">--</option>
-            @foreach($teams as $t)
+            @foreach($teamList as $t)
                 <option value="{{ $t->id }}" {{ (string)($values['away_team_id'] ?? '') === (string)$t->id ? 'selected' : '' }}>{{ $t->name }}</option>
             @endforeach
         </select>

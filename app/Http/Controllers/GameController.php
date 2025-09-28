@@ -10,8 +10,31 @@ use Illuminate\Http\Request;
 
 class GameController extends Controller
 {
-    public function index()
+    public function index(Request $request, Competition $competition = null)
     {
+        if ($competition) {
+            // Determine season: prefer explicit season query param, otherwise use competition->season
+            $season = null;
+            if ($request->filled('season')) {
+                $season = \App\Models\Season::find($request->query('season'));
+            }
+            if (! $season) {
+                $season = $competition->season;
+            }
+
+            // Load games for this competition, ordered by date and paginate for AJAX navigation
+            $perPage = 3; // match the season view's chunk size
+            $gamesQuery = $competition->games()->with(['homeTeam', 'awayTeam', 'homePlayer', 'awayPlayer'])->orderBy('date');
+            $games = $gamesQuery->paginate($perPage)->appends($request->query());
+
+            // If this is an AJAX request (fetch from the seasons page), return only the rendered list partial
+            if ($request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                return view('competitions.games._list', compact('competition', 'season', 'games'))->render();
+            }
+
+            return view('competitions.games.index', compact('competition', 'season', 'games'));
+        }
+
         $games = Game::with(['competition', 'homeTeam', 'awayTeam', 'homePlayer', 'awayPlayer'])->latest('date')->paginate(20);
         return view('games.index', compact('games'));
     }
@@ -19,9 +42,17 @@ class GameController extends Controller
     public function create()
     {
         $competitions = Competition::all();
-        $teams = Team::orderBy('name')->get();
+        $seasons = \App\Models\Season::orderBy('start_date', 'desc')->get();
+        $currentSeason = \App\Models\Season::where('current', true)->first() ?? $seasons->first();
+
+        // Limit teams to those in the current season by default
+        $teams = Team::where('season_id', $currentSeason?->id)->orderBy('name')->get();
         $players = Player::orderBy('name')->get();
-        return view('games.create', compact('competitions', 'teams', 'players'));
+
+        // Also expose the season-scoped teams as a separate variable for the form
+        $seasonTeams = $teams;
+
+        return view('games.create', compact('competitions', 'seasons', 'currentSeason', 'teams', 'players', 'seasonTeams'));
     }
 
     public function store(Request $request)
@@ -54,9 +85,17 @@ class GameController extends Controller
     public function edit(Game $game)
     {
         $competitions = Competition::all();
-        $teams = Team::orderBy('name')->get();
+        $seasons = \App\Models\Season::orderBy('start_date', 'desc')->get();
+        $currentSeason = \App\Models\Season::where('current', true)->first() ?? $seasons->first();
+
+        // For edit, default team lists to the game's season if available, otherwise current
+        $seasonId = $game->season_id ?? $currentSeason?->id;
+        $teams = Team::where('season_id', $seasonId)->orderBy('name')->get();
         $players = Player::orderBy('name')->get();
-        return view('games.edit', compact('game', 'competitions', 'teams', 'players'));
+
+        $seasonTeams = $teams;
+
+        return view('games.edit', compact('game', 'competitions', 'seasons', 'currentSeason', 'teams', 'players', 'seasonTeams'));
     }
 
     public function update(Request $request, Game $game)

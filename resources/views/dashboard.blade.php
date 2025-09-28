@@ -14,8 +14,27 @@
                 @csrf
                 <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded">Logout</button>
             </form>
+        </div>
+        
+        <br>
+        
+        <div class="flex items-center gap-3">
+            <a href="{{ route('games.index') }}" class="px-4 py-2 bg-blue-600 text-white rounded">Manage Games</a>
+        </div>    
 
-            <a href="{{ route('seasons.index') }}" class="px-4 py-2 bg-blue-600 text-white rounded">View Seasons</a>
+        <br>
+
+        <div class="flex items-center gap-3">
+            
+            <a href="{{ route('players.index') }}" class="px-4 py-2 bg-blue-600 text-white rounded">Manage Players</a>
+            <a href="{{ route('teams.index') }}" class="px-4 py-2 bg-blue-600 text-white rounded">Manage Teams</a>
+        </div>
+
+        <br>
+        <div class="flex items-center gap-3">
+            <a href="{{ route('seasons.index') }}" class="px-4 py-2 bg-blue-600 text-white rounded">Manage Seasons</a>
+            <a href="{{ route('competitions.index') }}" class="px-4 py-2 bg-blue-600 text-white rounded">Manage Competitions</a>
+
         </div>
     </div>
 @endsection
