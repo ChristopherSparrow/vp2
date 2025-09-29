@@ -43,17 +43,20 @@
         </header>
 
         <main class="container mx-auto px-4 py-6">
+            <h1 class="text-2xl font-bold mb-4">the <strong>Viking Pool League</strong></h1>
+            <p>Home</p>
             @yield('content')
         </main>
 
         <footer class="container mx-auto px-4 py-6 text-sm text-gray-500">
-            <div class="flex gap-3">
-                <a href="{{ url('/') }}" class="px-4 py-2 border rounded">Home</a> | 
-                <a href="{{ route('seasons.index') }}" class="px-4 py-2 bg-blue-600 text-white rounded">View Seasons</a>
-                <a href="{{ route('teams.index') }}" class="px-4 py-2 bg-blue-600 text-white rounded">View Teams</a>
-                <a href="{{ route('players.index') }}" class="px-4 py-2 bg-blue-600 text-white rounded">View Players</a>
-                <a href="{{ route('competitions.index') }}" class="px-4 py-2 bg-blue-600 text-white rounded">View Competitions</a>
-                <a href="{{ route('games.index') }}" class="px-4 py-2 bg-blue-600 text-white rounded">View Games</a>
+
+                <a href="{{ url('/') }}">Home</a> | 
+                <a href="{{ route('seasons.index') }}" >View Seasons</a> |
+                <a href="{{ route('teams.index') }}" >View Teams</a> |
+                <a href="{{ route('players.index') }}" >View Players</a> |
+                <a href="{{ route('competitions.index') }}" >View Competitions</a> |
+                <a href="{{ route('games.index') }}" >View Games</a> |
+                <a href="{{ route('frames.index') }}" >View Frames</a> |
 
                 @php
                     $currentSeason = null;
@@ -67,12 +70,12 @@
                     }
                 @endphp
                 @if($currentSeason)
-                    <a href="{{ route('seasons.show', $currentSeason) }}" class="px-4 py-2 bg-blue-600 text-white rounded"">Current Season</a>
+                    <a href="{{ route('seasons.show', $currentSeason) }}">Current Season</a>
                 @endif
 
-            </div>
+            
             <div class="flex justify-between items-center">
-                <div>&copy; {{ date('Y') }} {{ config('app.name', 'Laravel') }}</div>
+                <div>&copy; {{ date('Y') }} Chris Sparrow - {{ config('app.name', 'Laravel') }}</div>
             </div>
         </footer>
     </body>

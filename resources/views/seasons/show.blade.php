@@ -79,6 +79,15 @@
                                                     {{ $game->awayTeam->name ?? $game->awayPlayer->name ?? '—' }} ({{ $game->away_score ?? '—' }}) 
                                                 </span>
 
+                                                @if(optional($game->competition)->type === 'team_league')
+                                                    <a href="{{ route('games.show', $game) }}" title="View game" class="ml-4 text-green-600 hover:text-green-800">
+                                                        <!-- small game icon (link) -->
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                        </svg>
+                                                    </a>
+                                                @endif
+
                                             </div>
                                           
                                         </div>

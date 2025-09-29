@@ -7,13 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
-class Game extends Model
+class Frame extends Model
 {
     use HasFactory, SoftDeletes;
 
-    /**
-     * Ensure a ULID is generated for non-incrementing string primary keys.
-     */
     protected static function booted()
     {
         static::creating(function ($model) {
@@ -27,51 +24,42 @@ class Game extends Model
     public $incrementing = false;
 
     protected $fillable = [
-        'competition_id',
-        'home_team_id',
-        'away_team_id',
-        'home_indiv_id',
-        'away_indiv_id',
+        'game_id',
+        'home_player',
+        'away_player',
+        'game_no',
         'home_score',
         'away_score',
-        'date',
+        'eight_ball_clear_home',
+        'eight_ball_clear_away',
+        'home_game_no',
+        'away_game_no',
     ];
 
     protected $casts = [
+        'game_no' => 'integer',
         'home_score' => 'integer',
         'away_score' => 'integer',
-        'date' => 'datetime',
+        'eight_ball_clear_home' => 'boolean',
+        'eight_ball_clear_away' => 'boolean',
+        'home_game_no' => 'integer',
+        'away_game_no' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
 
-    public function competition()
+    public function game()
     {
-        return $this->belongsTo(Competition::class);
-    }
-
-    public function homeTeam()
-    {
-        return $this->belongsTo(Team::class, 'home_team_id');
-    }
-
-    public function awayTeam()
-    {
-        return $this->belongsTo(Team::class, 'away_team_id');
+        return $this->belongsTo(Game::class);
     }
 
     public function homePlayer()
     {
-        return $this->belongsTo(Player::class, 'home_indiv_id');
+        return $this->belongsTo(Player::class, 'home_player');
     }
 
     public function awayPlayer()
     {
-        return $this->belongsTo(Player::class, 'away_indiv_id');
-    }
-
-    public function frames()
-    {
-        return $this->hasMany(Frame::class, 'game_id');
+        return $this->belongsTo(Player::class, 'away_player');
     }
 }
