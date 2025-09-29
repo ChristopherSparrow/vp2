@@ -44,7 +44,7 @@
 
         <main class="container mx-auto px-4 py-6">
             <h1 class="text-2xl font-bold mb-4">the <strong>Viking Pool League</strong></h1>
-            <p>Home</p>
+
             @yield('content')
         </main>
 
@@ -78,5 +78,7 @@
                 <div>&copy; {{ date('Y') }} Chris Sparrow - {{ config('app.name', 'Laravel') }}</div>
             </div>
         </footer>
+        {{-- Render any pushed scripts from child views (e.g. page-specific JS) --}}
+        @stack('scripts')
     </body>
 </html>

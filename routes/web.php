@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CompetitionStatsController;
 use App\Http\Controllers\SeasonController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
@@ -10,6 +11,9 @@ use App\Http\Controllers\PlayerController;
 Route::get('/', function () {
     return view('welcome');
 });
+
+// Competition stats route
+Route::get('/competitions/{competition}/stats', [CompetitionStatsController::class, 'stats'])->name('competitions.stats');
 
 Route::resource('seasons', SeasonController::class);
 Route::resource('teams', TeamController::class);
