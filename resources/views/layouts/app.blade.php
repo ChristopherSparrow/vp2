@@ -13,8 +13,8 @@
 
     
     <body class="min-h-screen bg-gray-50 text-gray-900 ">
-        <header class="bg-white  border-b">
-            <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+        <header class="bg-white border-b">
+            <div class="container mx-auto px-4 py-4 flex items-center justify-between">
                 <div class="flex items-center gap-6">
                     <a href="{{ url('/') }}" class="font-semibold text-lg">{{ config('app.name', 'Laravel') }}</a>
 
@@ -41,9 +41,52 @@
                 </div>
             </div>
         </header>
+    @php
+        // Load current season competitions once for header/nav usage. Guarded for migrations/tests.
+        $currentSeason = null;
+        $currentCompetitions = null;
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('seasons')) {
+                $currentSeason = \App\Models\Season::where('current', true)->first();
+            }
+            if ($currentSeason && \Illuminate\Support\Facades\Schema::hasTable('competitions')) {
+                $currentCompetitions = $currentSeason->competitions()->orderBy('name')->get();
+            }
+        } catch (\Exception $e) {
+            $currentSeason = null;
+            $currentCompetitions = null;
+        }
+    @endphp
+
+    <div class="flex overflow-x-auto snap-x snap-mandatory">
+        <div class="md:hidden flex overflow-x-auto whitespace-nowrap no-scrollbar bg-gray-200 p-2">
+            <a href="{{ url('/') }}" class="snap-start px-4 py-2">Home</a>
+            @if($currentCompetitions && $currentCompetitions->isNotEmpty())
+                @foreach($currentCompetitions as $competition)
+                    <a href="{{ route('competitions.show', $competition) }}" class="snap-start px-4 py-2">{{ $competition->name }}</a>
+                @endforeach
+            @else
+                                <a href="{{ route('seasons.index') }}" class="snap-start px-4 py-2">View Seasons</a> 
+            @endif
+
+        </div>
+    </div>
 
         <main class="container mx-auto px-4 py-6">
-            <h1 class="text-2xl font-bold mb-4">the <strong>Viking Pool League</strong></h1>
+            <div class="hidden md:flex bg-gray-200">
+                <a href="{{ url('/') }}" class="snap-start px-4 py-2">Home</a> 
+
+                @if($currentCompetitions && $currentCompetitions->isNotEmpty())
+                    @foreach($currentCompetitions as $competition)
+                        <a href="{{ route('competitions.show', $competition) }}" class="snap-start px-4 py-2">{{ $competition->name }}</a>
+                    @endforeach
+                @else
+                                    <a href="{{ route('seasons.index') }}" class="snap-start px-4 py-2">View Seasons</a> 
+                @endif
+
+            </div>
+
+            <h1 class="text-2xl font-bold mb-4 py-4">the <strong>Viking Pool League</strong></h1>
 
             @yield('content')
         </main>
@@ -65,7 +108,6 @@
                             $currentSeason = \App\Models\Season::where('current', true)->first();
                         }
                     } catch (\Exception $e) {
-                        // If Schema isn't available or DB not migrated (tests), just ignore
                         $currentSeason = null;
                     }
                 @endphp
