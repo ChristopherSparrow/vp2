@@ -79,7 +79,11 @@
 
                             <div class="flex items-center gap-2">
                                 @if(optional($game->competition)->type === 'team_league')
-                                    <a href="{{ route('games.show', $game) }}" class="text-green-600 hover:text-green-800">View</a>
+                                    @if(!empty($game->getKey()))
+                                        <a href="{{ route('games.show', $game->getKey()) }}" class="text-green-600 hover:text-green-800">View</a>
+                                    @else
+                                        <span class="text-gray-500">View</span>
+                                    @endif
                                 @endif
                             </div>
                         </div>
