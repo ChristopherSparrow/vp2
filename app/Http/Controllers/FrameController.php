@@ -22,9 +22,38 @@ class FrameController extends Controller
             return str_starts_with($g->competition->type ?? '', 'team');
         });
 
+        // Prepare next available frame number per game (1..12). Use max game_no where possible.
+        // If a game already has 12 frames, mark as null so the UI can indicate it's full.
+        $gameNextNumbers = [];
+        foreach ($games as $g) {
+            $max = $g->frames()->max('game_no');
+            $next = ($max ?: 0) + 1;
+            $gameNextNumbers[$g->id] = $next > 12 ? null : $next;
+        }
+
+        // Preload players for home/away teams per game for client convenience.
+        $homePlayersByGame = [];
+        $awayPlayersByGame = [];
+        foreach ($games as $g) {
+            $homePlayersByGame[$g->id] = [];
+            $awayPlayersByGame[$g->id] = [];
+            if ($g->home_team_id) {
+                $homeTeam = $g->homeTeam()->with(['players'])->first();
+                if ($homeTeam) {
+                    $homePlayersByGame[$g->id] = $homeTeam->players()->orderBy('name')->get()->map(function($p){ return ['id' => $p->id, 'name' => $p->name]; })->toArray();
+                }
+            }
+            if ($g->away_team_id) {
+                $awayTeam = $g->awayTeam()->with(['players'])->first();
+                if ($awayTeam) {
+                    $awayPlayersByGame[$g->id] = $awayTeam->players()->orderBy('name')->get()->map(function($p){ return ['id' => $p->id, 'name' => $p->name]; })->toArray();
+                }
+            }
+        }
+
         $players = Player::orderBy('name')->get();
 
-        return view('frames.create', compact('games', 'players'));
+        return view('frames.create', compact('games', 'players', 'gameNextNumbers', 'homePlayersByGame', 'awayPlayersByGame'));
     }
 
     public function store(Request $request)
@@ -48,6 +77,16 @@ class FrameController extends Controller
             return back()->withErrors(['game_id' => 'Selected game is not a team competition.'])->withInput();
         }
 
+        // Auto-assign next frame/game_no if not provided. Return an error if the game already has 12 frames.
+        if (empty($data['game_no'])) {
+            $max = $game->frames()->max('game_no');
+            $next = ($max ?: 0) + 1;
+            if ($next > 12) {
+                return back()->withErrors(['game_id' => 'Selected game already has the maximum of 12 frames.'])->withInput();
+            }
+            $data['game_no'] = $next;
+        }
+
         $frame = Frame::create($data + [
             'eight_ball_clear_home' => $request->boolean('eight_ball_clear_home'),
             'eight_ball_clear_away' => $request->boolean('eight_ball_clear_away'),
@@ -68,7 +107,32 @@ class FrameController extends Controller
             return str_starts_with($g->competition->type ?? '', 'team');
         });
         $players = Player::orderBy('name')->get();
-        return view('frames.edit', compact('frame', 'games', 'players'));
+        // also provide next numbers for client-side convenience if needed
+        $gameNextNumbers = [];
+        $homePlayersByGame = [];
+        $awayPlayersByGame = [];
+        foreach ($games as $g) {
+            $max = $g->frames()->max('game_no');
+            $next = ($max ?: 0) + 1;
+            $gameNextNumbers[$g->id] = $next > 12 ? null : $next;
+
+            $homePlayersByGame[$g->id] = [];
+            $awayPlayersByGame[$g->id] = [];
+            if ($g->home_team_id) {
+                $homeTeam = $g->homeTeam()->with(['players'])->first();
+                if ($homeTeam) {
+                    $homePlayersByGame[$g->id] = $homeTeam->players()->orderBy('name')->get()->map(function($p){ return ['id' => $p->id, 'name' => $p->name]; })->toArray();
+                }
+            }
+            if ($g->away_team_id) {
+                $awayTeam = $g->awayTeam()->with(['players'])->first();
+                if ($awayTeam) {
+                    $awayPlayersByGame[$g->id] = $awayTeam->players()->orderBy('name')->get()->map(function($p){ return ['id' => $p->id, 'name' => $p->name]; })->toArray();
+                }
+            }
+        }
+
+        return view('frames.edit', compact('frame', 'games', 'players', 'gameNextNumbers', 'homePlayersByGame', 'awayPlayersByGame'));
     }
 
     public function update(Request $request, Frame $frame)

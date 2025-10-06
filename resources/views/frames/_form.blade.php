@@ -21,36 +21,52 @@
                 <select name="game_id" required class="mt-1 block w-full rounded border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500">
                     <option value="">Select</option>
                     @foreach($games as $g)
-                        <option value="{{ $g->id }}" {{ (string)($values['game_id'] ?? '') === (string)$g->id ? 'selected' : '' }}>{{ $g->competition->name ?? 'Game' }} — {{ optional($g->date)->format('Y-m-d') ?? '' }}</option>
+                        <option value="{{ $g->id }}" {{ (string)($values['game_id'] ?? '') === (string)$g->id ? 'selected' : '' }}>
+                            {{ optional($g->date)->format('Y-m-d') ?? '' }} — {{ optional($g->homeTeam)->name ?? optional($g->homePlayer)->name ?? 'Home' }} vs {{ optional($g->awayTeam)->name ?? optional($g->awayPlayer)->name ?? 'Away' }}
+                        </option>
                     @endforeach
                 </select>
                 @error('game_id')<div class="text-red-600 text-sm mt-1">{{ $message }}</div>@enderror
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700">Game No</label>
-                <input type="number" name="game_no" value="{{ $values['game_no'] ?? '' }}" class="mt-1 block w-full rounded border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500" min="1" max="12" />
+                <label class="block text-sm font-medium text-gray-700">Frame No</label>
+                <input id="game_no_input" type="number" name="game_no" value="{{ $values['game_no'] ?? '' }}" class="mt-1 block w-full rounded border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500" min="1" max="12" {{ $isEdit ? '' : 'readonly' }} />
                 @error('game_no')<div class="text-red-600 text-sm mt-1">{{ $message }}</div>@enderror
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700">Home Player</label>
-                <select name="home_player" class="mt-1 block w-full rounded border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500">
+                <select id="home_player_select" name="home_player" class="mt-1 block w-full rounded border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500">
                     <option value="">--</option>
-                    @foreach($players as $p)
-                        <option value="{{ $p->id }}" {{ (string)($values['home_player'] ?? '') === (string)$p->id ? 'selected' : '' }}>{{ $p->name }}</option>
-                    @endforeach
+                    @if(isset($homePlayersByGame) && !empty($homePlayersByGame))
+                        @php $hList = $homePlayersByGame[$values['game_id'] ?? ''] ?? [] @endphp
+                        @foreach($hList as $p)
+                            <option value="{{ $p['id'] }}" {{ (string)($values['home_player'] ?? '') === (string)$p['id'] ? 'selected' : '' }}>{{ $p['name'] }}</option>
+                        @endforeach
+                    @else
+                        @foreach($players as $p)
+                            <option value="{{ $p->id }}" {{ (string)($values['home_player'] ?? '') === (string)$p->id ? 'selected' : '' }}>{{ $p->name }}</option>
+                        @endforeach
+                    @endif
                 </select>
                 @error('home_player')<div class="text-red-600 text-sm mt-1">{{ $message }}</div>@enderror
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700">Away Player</label>
-                <select name="away_player" class="mt-1 block w-full rounded border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500">
+                <select id="away_player_select" name="away_player" class="mt-1 block w-full rounded border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500">
                     <option value="">--</option>
-                    @foreach($players as $p)
-                        <option value="{{ $p->id }}" {{ (string)($values['away_player'] ?? '') === (string)$p->id ? 'selected' : '' }}>{{ $p->name }}</option>
-                    @endforeach
+                    @if(isset($awayPlayersByGame) && !empty($awayPlayersByGame))
+                        @php $aList = $awayPlayersByGame[$values['game_id'] ?? ''] ?? [] @endphp
+                        @foreach($aList as $p)
+                            <option value="{{ $p['id'] }}" {{ (string)($values['away_player'] ?? '') === (string)$p['id'] ? 'selected' : '' }}>{{ $p['name'] }}</option>
+                        @endforeach
+                    @else
+                        @foreach($players as $p)
+                            <option value="{{ $p->id }}" {{ (string)($values['away_player'] ?? '') === (string)$p->id ? 'selected' : '' }}>{{ $p->name }}</option>
+                        @endforeach
+                    @endif
                 </select>
                 @error('away_player')<div class="text-red-600 text-sm mt-1">{{ $message }}</div>@enderror
             </div>
@@ -96,3 +112,70 @@
         </div>
     </div>
 </form>
+
+@if(isset($gameNextNumbers))
+    <script>
+        (function(){
+            const gameNextNumbers = {!! json_encode($gameNextNumbers ?? []) !!};
+            const homePlayersByGame = {!! json_encode($homePlayersByGame ?? []) !!};
+            const awayPlayersByGame = {!! json_encode($awayPlayersByGame ?? []) !!};
+
+            const select = document.querySelector('select[name="game_id"]');
+            const input = document.getElementById('game_no_input');
+            const homeSelect = document.getElementById('home_player_select');
+            const awaySelect = document.getElementById('away_player_select');
+
+            function setNextForSelected() {
+                if (!select || !input) return;
+                const gid = select.value;
+                if (!gid) return;
+                const next = (gameNextNumbers[gid] !== undefined) ? gameNextNumbers[gid] : null;
+                if (next !== null && (input.value === '' || input.value === '0')) {
+                    input.value = next;
+                }
+            }
+
+            function populatePlayersForGame(gid) {
+                // populate home
+                if (homeSelect) {
+                    homeSelect.innerHTML = '<option value="">--</option>';
+                    const list = (homePlayersByGame[gid] || []);
+                    list.forEach(function(p){
+                        const opt = document.createElement('option');
+                        opt.value = p.id;
+                        opt.textContent = p.name;
+                        homeSelect.appendChild(opt);
+                    });
+                }
+                // populate away
+                if (awaySelect) {
+                    awaySelect.innerHTML = '<option value="">--</option>';
+                    const list = (awayPlayersByGame[gid] || []);
+                    list.forEach(function(p){
+                        const opt = document.createElement('option');
+                        opt.value = p.id;
+                        opt.textContent = p.name;
+                        awaySelect.appendChild(opt);
+                    });
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', function(){
+                setNextForSelected();
+                // populate for initial selection
+                if (select && select.value) populatePlayersForGame(select.value);
+            });
+
+            if (select) select.addEventListener('change', function(){
+                const gid = this.value;
+                const next = (gameNextNumbers[gid] !== undefined) ? gameNextNumbers[gid] : null;
+                if (next !== null) {
+                    input.value = next;
+                } else {
+                    input.value = 1;
+                }
+                populatePlayersForGame(gid);
+            });
+        })();
+    </script>
+@endif

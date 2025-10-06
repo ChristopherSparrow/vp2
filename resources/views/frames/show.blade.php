@@ -11,7 +11,7 @@
                     <dd class="mt-1 text-sm text-gray-900">{{ $frame->game->competition->name ?? '—' }}</dd>
                 </div>
                 <div>
-                    <dt class="text-sm font-medium text-gray-500">Game No</dt>
+                    <dt class="text-sm font-medium text-gray-500">Frame No</dt>
                     <dd class="mt-1 text-sm text-gray-900">{{ $frame->game_no }}</dd>
                 </div>
 

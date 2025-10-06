@@ -13,7 +13,7 @@
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Game</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Game No</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Frame No</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Home</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Away</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Score</th>
