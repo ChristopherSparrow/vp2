@@ -131,6 +131,31 @@ class GameController extends Controller
 
         $game->update($data);
 
+        // If caller provided a return_to, prefer redirecting back there (prevent open redirects)
+        $returnTo = $request->input('return_to');
+        if ($returnTo) {
+            // Only allow internal redirects. If returnTo is a full URL, ensure it starts with the app URL.
+            $appUrl = rtrim(config('app.url', ''), '/');
+            $isInternal = false;
+
+            try {
+                $parsed = filter_var($returnTo, FILTER_VALIDATE_URL) ? $returnTo : null;
+            } catch (\Throwable $e) {
+                $parsed = null;
+            }
+
+            if (! $parsed) {
+                // It's a relative path or route name; consider it safe
+                $isInternal = true;
+            } elseif ($appUrl && str_starts_with($returnTo, $appUrl)) {
+                $isInternal = true;
+            }
+
+            if ($isInternal) {
+                return redirect($returnTo)->with('success', 'Game updated');
+            }
+        }
+
         return redirect()->route('games.show', $game)->with('success', 'Game updated');
     }
 

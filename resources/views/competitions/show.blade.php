@@ -28,12 +28,11 @@
         <h2 class="text-xl font-bold mb-3">Fixtures & Results</h2>
 
         @php
-            // Show fixtures for this competition, paginated
-            $perPage = 10;
-            $games = $competition->games()->with(['homeTeam', 'awayTeam', 'competition'])->orderBy('date')->paginate($perPage);
+            // Show fixtures for this competition (no pagination) and we'll group them by date in the view
+            $games = $competition->games()->with(['homeTeam', 'awayTeam', 'competition'])->orderBy('date')->get();
         @endphp
 
-        @if($games->total() == 0)
+        @if($games->isEmpty())
             <div class="text-gray-600">No fixtures for this competition.</div>
         @else
             @if(!empty($standings) && $competition->type === 'team_league')
@@ -67,32 +66,53 @@
                     </div>
                 </div>
             @endif
-            <div class="space-y-3">
-                @foreach($games as $game)
-                    <div class="border rounded p-3 bg-white">
-                        <div class="text-xs text-gray-500">{{ $game->date?->toDateString() }}</div>
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <div class="font-medium">{{ $game->homeTeam->name ?? $game->homePlayer->name ?? '—' }} ({{ $game->home_score ?? '—' }})</div>
-                                <div class="text-sm text-gray-600">vs {{ $game->awayTeam->name ?? $game->awayPlayer->name ?? '—' }} ({{ $game->away_score ?? '—' }})</div>
-                            </div>
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                @foreach($games->groupBy(fn($g) => $g->date?->format('Y-m-d') ?? 'TBA') as $date => $dayGames)
+                    <div class="p-2 border rounded bg-gray-50">
+                        <h4 class="font-semibold mb-2">
+                            @if($date === 'TBA')
+                                To be announced
+                            @else
+                                {{-- Use the grouped Y-m-d key to format the header consistently --}}
+                                {{ \Illuminate\Support\Carbon::createFromFormat('Y-m-d', $date)->format('l, j M Y') }}
+                            @endif
+                        </h4>
 
-                            <div class="flex items-center gap-2">
-                                @if(optional($game->competition)->type === 'team_league')
-                                    @if(!empty($game->getKey()))
-                                        <a href="{{ route('games.show', $game->getKey()) }}" class="text-green-600 hover:text-green-800">View</a>
-                                    @else
-                                        <span class="text-gray-500">View</span>
-                                    @endif
-                                @endif
-                            </div>
+                        <div class="space-y-3">
+                            @foreach($dayGames as $game)
+                                <div class="border rounded p-3 bg-white">
+                                    
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <div class="font-medium">{{ $game->homeTeam->name ?? $game->homePlayer->name ?? '—' }} ({{ $game->home_score ?? '—' }})</div>
+                                            <div class="font-medium">{{ $game->awayTeam->name ?? $game->awayPlayer->name ?? '—' }} ({{ $game->away_score ?? '—' }})</div>
+                                            @if(isset($game->homeTeam) && !empty($game->homeTeam->location))
+                                                <div class="mt-1 text-xs text-gray-500 flex items-center gap-1">
+                                                    <!-- small location pin -->
+                                                    <svg class="w-3 h-3 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                        <path d="M21 10c0 6-9 13-9 13S3 16 3 10a9 9 0 1 1 18 0z"></path>
+                                                        <circle cx="12" cy="10" r="3"></circle>
+                                                    </svg>
+                                                    <span>{{ $game->homeTeam->location }}</span>
+                                                </div>
+                                            @endif
+                                        </div>
+
+                                        <div class="flex items-center gap-2">
+                                            @if(optional($game->competition)->type === 'team_league')
+                                                @if(!empty($game->getKey()))
+                                                    <a href="{{ route('games.show', $game->getKey()) }}" class="text-green-600 hover:text-green-800">View</a>
+                                                @else
+                                                    <span class="text-gray-500">View</span>
+                                                @endif
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
                     </div>
                 @endforeach
-            </div>
-
-            <div class="mt-4">
-                {{ $games->links() }}
             </div>
         @endif
     </div>

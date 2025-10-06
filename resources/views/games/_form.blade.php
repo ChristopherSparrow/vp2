@@ -112,6 +112,14 @@
         </div>
     </div>
 
+    {{-- Preserve a return URL so controller can redirect back to the index or caller --}}
+    @php
+        $returnTo = old('return_to') ?? request()->query('return_to') ?? null;
+    @endphp
+    @if($returnTo)
+        <input type="hidden" name="return_to" value="{{ $returnTo }}" />
+    @endif
+
     @push('scripts')
         <script>
             // Map competition id -> type for client-side toggling

@@ -35,7 +35,7 @@
 
                             <td class="border border-gray-300 px-2 py-1">
                                 @if(!empty($game->getKey()))
-                                    <a href="{{ route('games.edit', $game->getKey()) }}" class="ml-2">Edit</a>
+                                    <a href="{{ route('games.edit', [$game->getKey(), 'return_to' => route('games.index')]) }}" class="ml-2">Edit</a>
                                 @else
                                     <span class="text-gray-500 ml-2">Edit</span>
                                 @endif
