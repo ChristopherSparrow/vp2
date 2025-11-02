@@ -2,13 +2,12 @@
 
 @section('content')
 <div class="container mx-auto py-4">
-    <h2>{{ $game->competition->name ?? '—' }}</h2>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
         <div class="border rounded-lg p-4 shadow-sm bg-white">
             <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="text-lg font-semibold">Match</h2>
+                    <h2 class="text-lg font-semibold"></h2>{{ $game->competition->name ?? '—' }}</h2>
                     <p class="text-sm text-gray-600">{{ optional($game->date)->format('F j, Y g:ia') ?? '—' }}</p>
                 </div>
 
@@ -16,7 +15,6 @@
 
             <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="bg-gray-50 p-3 rounded">
-                    <div class="text-xs text-gray-500">Home</div>
                     <div class="font-medium flex items-center justify-between">
                         <span>{{ $game->homeTeam->name ?? $game->homePlayer->name ?? '—' }}</span>
                         <span class="text-xl font-bold text-right">{{ $game->home_score ?? '—' }}</span>
@@ -24,7 +22,7 @@
                 </div>
             
                 <div class="bg-gray-50 p-3 rounded">
-                    <div class="text-xs text-gray-500">Away</div>
+                    
                     <div class="font-medium flex items-center justify-between">
                         <span>{{ $game->awayTeam->name ?? $game->awayPlayer->name ?? '—' }}</span>
                         <span class="text-xl font-bold text-right">{{ $game->away_score ?? '—' }}</span>
