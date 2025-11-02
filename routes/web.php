@@ -9,7 +9,34 @@ use App\Http\Controllers\TeamController;
 use App\Http\Controllers\PlayerController;
 
 Route::get('/', function () {
-    return view('welcome');
+    // Show fixtures: played in the last 5 days and upcoming in the next 5 days
+    $now = now();
+    $playedStart = $now->copy()->subDays(7)->startOfDay();
+    $playedEnd = $now->copy()->endOfDay();
+
+    $upcomingStart = $now->copy()->startOfDay();
+    $upcomingEnd = $now->copy()->addDays(7)->endOfDay();
+
+    $played = App\Models\Game::with(['competition', 'homeTeam', 'awayTeam', 'homePlayer', 'awayPlayer'])
+        ->whereBetween('date', [$playedStart, $playedEnd])
+        ->get()
+        ->map(function ($g) {
+            $g->period = 'played';
+            return $g;
+        });
+
+    $upcoming = App\Models\Game::with(['competition', 'homeTeam', 'awayTeam', 'homePlayer', 'awayPlayer'])
+        ->whereBetween('date', [$upcomingStart, $upcomingEnd])
+        ->get()
+        ->map(function ($g) {
+            $g->period = 'upcoming';
+            return $g;
+        });
+
+    // Merge and sort by date (asc). We'll group in the view by date then competition.
+    $fixtures = $played->merge($upcoming)->sortBy('date')->values();
+
+    return view('welcome', compact('fixtures'));
 });
 
 // Competition stats route
