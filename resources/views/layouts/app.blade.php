@@ -72,7 +72,7 @@
         </div>
     </div>
 
-        <main class="container mx-auto px-4 py-6">
+        <main class="container mx-auto px-4 py-1">
             <div class="hidden md:flex bg-gray-200">
                 <a href="{{ url('/') }}" class="snap-start px-4 py-2">Home</a> 
 
@@ -86,7 +86,7 @@
 
             </div>
 
-            <h1 class="text-2xl font-bold mb-4 py-4">the <strong>Viking Pool League</strong></h1>
+            <h1 class="text-2xl font-bold mb-4 py-4" style="margin:0px;">the <strong>Viking Pool League</strong></h1>
 
             @yield('content')
         </main>
