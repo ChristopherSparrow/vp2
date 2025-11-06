@@ -15,12 +15,11 @@ class Player extends Model
 
     protected $fillable = [
         'name',
-        'position',
-        'number',
+        'phone',
     ];
 
     protected $casts = [
-        'number' => 'integer',
+        'phone' => 'string',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

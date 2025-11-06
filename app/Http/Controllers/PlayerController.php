@@ -20,7 +20,9 @@ class PlayerController extends Controller
     /** Show the form for creating a new player. */
     public function create()
     {
-        $teams = Team::orderBy('name')->get();
+        // prefer teams for the current season, fallback to all teams
+        $season = \App\Models\Season::where('current', true)->first();
+        $teams = $season ? $season->teams()->orderBy('name')->get() : Team::orderBy('name')->get();
         return view('players.create', compact('teams'));
     }
 
@@ -29,27 +31,30 @@ class PlayerController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
-            'position' => 'nullable|string|max:255',
-            'number' => 'nullable|integer|min:0',
+            'phone' => 'nullable|string|max:32',
+            'team_ids' => 'nullable|array',
+            'team_ids.*' => 'nullable|string|exists:teams,id',
         ]);
 
-        $assignments = $request->input('assignments', []);
+        $teamIds = $request->input('team_ids', []);
 
-        DB::transaction(function () use ($data, $assignments, &$player) {
+        DB::transaction(function () use ($data, $teamIds, &$player) {
             $player = new Player($data);
             if (empty($player->getKey())) {
                 $player->{$player->getKeyName()} = (string) Str::ulid();
             }
             $player->save();
 
-            // persist assignments if any
-            foreach($assignments as $a){
-                if(empty($a['team_id']) || empty($a['start_date'])) continue;
+            // persist team assignments (multi-select): create PlayerTeam rows for each selected team
+            foreach ((array) $teamIds as $tid) {
+                if (empty($tid)) continue;
+                $team = \App\Models\Team::find($tid);
+                $seasonStart = $team && $team->season && $team->season->start_date ? $team->season->start_date : now()->toDateString();
                 $pt = new \App\Models\PlayerTeam([
                     'player_id' => $player->id,
-                    'team_id' => $a['team_id'],
-                    'start_date' => $a['start_date'],
-                    'end_date' => $a['end_date'] ?? null,
+                    'team_id' => $tid,
+                    'start_date' => $seasonStart ?? now()->toDateString(),
+                    'end_date' => null,
                 ]);
                 $pt->{$pt->getKeyName()} = (string) Str::ulid();
                 $pt->save();
@@ -68,7 +73,8 @@ class PlayerController extends Controller
     /** Show the form for editing the specified player. */
     public function edit(Player $player)
     {
-        $teams = Team::orderBy('name')->get();
+        $season = \App\Models\Season::where('current', true)->first();
+        $teams = $season ? $season->teams()->orderBy('name')->get() : Team::orderBy('name')->get();
         return view('players.edit', compact('player','teams'));
     }
 
@@ -77,25 +83,26 @@ class PlayerController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
-            'position' => 'nullable|string|max:255',
-            'number' => 'nullable|integer|min:0',
+            'phone' => 'nullable|string|max:32',
         ]);
 
-        $assignments = $request->input('assignments', []);
+        $teamIds = $request->input('team_ids', []);
 
-        DB::transaction(function () use ($player, $data, $assignments) {
+        DB::transaction(function () use ($player, $data, $teamIds) {
             $player->update($data);
 
-            // Sync assignments: a simple approach — remove all existing PlayerTeam rows and re-create from input
+            // Simple sync: remove all existing PlayerTeam rows for this player and re-create from submitted team ids
             \App\Models\PlayerTeam::where('player_id', $player->id)->delete();
 
-            foreach($assignments as $a){
-                if(empty($a['team_id']) || empty($a['start_date'])) continue;
+            foreach ((array) $teamIds as $tid) {
+                if (empty($tid)) continue;
+                $team = \App\Models\Team::find($tid);
+                $start = $team && $team->season && $team->season->start_date ? $team->season->start_date : now()->toDateString();
                 $pt = new \App\Models\PlayerTeam([
                     'player_id' => $player->id,
-                    'team_id' => $a['team_id'],
-                    'start_date' => $a['start_date'],
-                    'end_date' => $a['end_date'] ?? null,
+                    'team_id' => $tid,
+                    'start_date' => $start,
+                    'end_date' => null,
                 ]);
                 $pt->{$pt->getKeyName()} = (string) Str::ulid();
                 $pt->save();

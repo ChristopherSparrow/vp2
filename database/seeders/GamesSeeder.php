@@ -116,13 +116,13 @@ class GamesSeeder extends Seeder
             if ($homeIndiv) {
                 $homePlayer = Player::firstWhere('name', $homeIndiv);
                 if (! $homePlayer) {
-                    $homePlayer = Player::create(['name' => $homeIndiv, 'position' => null, 'number' => null]);
+                    $homePlayer = Player::create(['name' => $homeIndiv, 'phone' => null]);
                 }
             }
             if ($awayIndiv) {
                 $awayPlayer = Player::firstWhere('name', $awayIndiv);
                 if (! $awayPlayer) {
-                    $awayPlayer = Player::create(['name' => $awayIndiv, 'position' => null, 'number' => null]);
+                    $awayPlayer = Player::create(['name' => $awayIndiv, 'phone' => null]);
                 }
             }
 

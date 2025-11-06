@@ -39,12 +39,16 @@ class SeasonPlayersTest extends TestCase
         $team->save();
 
         // create two players
-    $playerA = new Player(['name' => 'Active Player', 'position' => 'F', 'number' => 9]);
+    $playerA = new Player();
     $playerA->id = (string) Str::ulid();
+    $playerA->name = 'Active Player';
+    $playerA->phone = '9';
     $playerA->save();
 
-    $playerB = new Player(['name' => 'Deleted Player', 'position' => 'G', 'number' => 10]);
+    $playerB = new Player();
     $playerB->id = (string) Str::ulid();
+    $playerB->name = 'Deleted Player';
+    $playerB->phone = '10';
     $playerB->save();
 
         // assign both players to the team (playerTeams)

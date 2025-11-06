@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 use App\Http\Controllers\CompetitionStatsController;
 use App\Http\Controllers\SeasonController;
 use App\Http\Controllers\AuthController;
@@ -17,27 +18,37 @@ Route::get('/', function () {
     $upcomingStart = $now->copy()->startOfDay();
     $upcomingEnd = $now->copy()->addDays(7)->endOfDay();
 
-    $played = App\Models\Game::with(['competition', 'homeTeam', 'awayTeam', 'homePlayer', 'awayPlayer'])
-        ->whereBetween('date', [$playedStart, $playedEnd])
-        ->get()
-        ->map(function ($g) {
-            $g->period = 'played';
-            return $g;
-        });
+    // Only attempt to query games if migrations have been run and the table exists
+    if (Schema::hasTable('games')) {
+        $played = App\Models\Game::with(['competition', 'homeTeam', 'awayTeam', 'homePlayer', 'awayPlayer'])
+            ->whereBetween('date', [$playedStart, $playedEnd])
+            ->get()
+            ->map(function ($g) {
+                $g->period = 'played';
+                return $g;
+            });
 
-    $upcoming = App\Models\Game::with(['competition', 'homeTeam', 'awayTeam', 'homePlayer', 'awayPlayer'])
-        ->whereBetween('date', [$upcomingStart, $upcomingEnd])
-        ->get()
-        ->map(function ($g) {
-            $g->period = 'upcoming';
-            return $g;
-        });
+        $upcoming = App\Models\Game::with(['competition', 'homeTeam', 'awayTeam', 'homePlayer', 'awayPlayer'])
+            ->whereBetween('date', [$upcomingStart, $upcomingEnd])
+            ->get()
+            ->map(function ($g) {
+                $g->period = 'upcoming';
+                return $g;
+            });
+    } else {
+        $played = collect();
+        $upcoming = collect();
+    }
 
     // Merge and sort by date (asc). We'll group in the view by date then competition.
     $fixtures = $played->merge($upcoming)->sortBy('date')->values();
 
     // Compute a simple aggregated league table for the current season.
-    $season = App\Models\Season::where('current', true)->first() ?? App\Models\Season::orderBy('start_date', 'desc')->first();
+    if (Schema::hasTable('seasons')) {
+        $season = App\Models\Season::where('current', true)->first() ?? App\Models\Season::orderBy('start_date', 'desc')->first();
+    } else {
+        $season = null;
+    }
     $standings = null;
 
     if ($season) {

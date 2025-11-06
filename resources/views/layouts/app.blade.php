@@ -60,7 +60,7 @@
 
     <div class="flex overflow-x-auto snap-x snap-mandatory">
         <div class="md:hidden flex overflow-x-auto whitespace-nowrap no-scrollbar bg-gray-200 p-2">
-            <a href="{{ url('/') }}" class="snap-start px-4 py-2">Home</a>
+
             @if($currentCompetitions && $currentCompetitions->isNotEmpty())
                 @foreach($currentCompetitions as $competition)
                     <a href="{{ route('competitions.show', $competition) }}" class="snap-start px-4 py-2">{{ $competition->name }}</a>
@@ -74,7 +74,7 @@
 
         <main class="container mx-auto px-4 py-1">
             <div class="hidden md:flex bg-gray-200">
-                <a href="{{ url('/') }}" class="snap-start px-4 py-2">Home</a> 
+                
 
                 @if($currentCompetitions && $currentCompetitions->isNotEmpty())
                     @foreach($currentCompetitions as $competition)
