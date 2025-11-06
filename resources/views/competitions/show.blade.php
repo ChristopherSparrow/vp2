@@ -25,7 +25,7 @@
 
 
     <div class="mt-8">
-        <h2 class="text-xl font-bold mb-3">Fixtures & Results</h2>
+
 
         @php
             // Show fixtures for this competition (no pagination) and we'll group them by date in the view
@@ -37,7 +37,7 @@
         @else
             @if(!empty($standings) && $competition->type === 'team_league')
                 <div class="mb-6">
-                    <h3 class="text-lg font-semibold mb-2">Standings</h3>
+                    <h2 class="text-xl font-bold mb-3">League Standings</h2>
                     <div class="overflow-x-auto">
                         <table class="min-w-full bg-white border">
                             <thead>
@@ -66,22 +66,24 @@
                     </div>
                 </div>
             @endif
-            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <h2 class="text-xl font-bold mb-3">Fixtures & Results</h2>
+            <div class="mt-4 space-y-3">
                 @foreach($games->groupBy(fn($g) => $g->date?->format('Y-m-d') ?? 'TBA') as $date => $dayGames)
-                    <div class="p-2 border rounded bg-gray-50">
-                        <h4 class="font-semibold mb-2">
-                            @if($date === 'TBA')
-                                To be announced
-                            @else
-                                {{-- Use the grouped Y-m-d key to format the header consistently --}}
-                                {{ \Illuminate\Support\Carbon::createFromFormat('Y-m-d', $date)->format('l, j M Y') }}
-                            @endif
-                        </h4>
+                    <details class="border rounded bg-gray-50">
+                        <summary class="px-4 py-2 font-semibold cursor-pointer flex items-center justify-between">
+                            <span>
+                                @if($date === 'TBA')
+                                    To be announced
+                                @else
+                                    {{ \Illuminate\Support\Carbon::createFromFormat('Y-m-d', $date)->format('l, j M Y') }}
+                                @endif
+                            </span>
+                            <span class="text-sm text-gray-500">{{ $dayGames->count() }} fixture{{ $dayGames->count() === 1 ? '' : 's' }}</span>
+                        </summary>
 
-                        <div class="space-y-3">
+                        <div class="p-4 space-y-3">
                             @foreach($dayGames as $game)
                                 <div class="border rounded p-3 bg-white">
-                                    
                                     <div class="flex items-center justify-between">
                                         <div>
                                             <div class="font-medium">{{ $game->homeTeam->name ?? $game->homePlayer->name ?? '—' }} ({{ $game->home_score ?? '—' }})</div>
@@ -111,8 +113,102 @@
                                 </div>
                             @endforeach
                         </div>
-                    </div>
+                    </details>
                 @endforeach
+            </div>
+            <h2 class="text-xl font-bold mb-3">Statistics</h2>
+
+            @php
+                // Determine the season to use: prefer the current season if available,
+                // otherwise fall back to the competition's season (if present).
+                $season = $currentSeason ?? $competition->season;
+
+                // Build a DB-level query to include frames that are the first game for a player
+                // and where that player actually won the frame. Do this at DB level to avoid
+                // PHP-side type/coercion issues and to include both home and away winners.
+                $firstFrameWinners = collect();
+                try {
+                    if ($season && $competition->getKey()) {
+                        $firstFrameWinners = \App\Models\Frame::with(['game.homeTeam', 'game.awayTeam', 'game.homePlayer', 'game.awayPlayer', 'homePlayer', 'awayPlayer'])
+                            ->whereHas('game', function ($q) use ($competition) {
+                                $q->where('competition_id', $competition->getKey());
+                            })
+                            ->where(function ($q) {
+                                // home_game_no == 1 AND home_score > away_score
+                                $q->where(function ($q2) {
+                                    $q2->where('home_game_no', 1)
+                                        ->whereColumn('home_score', '>', 'away_score');
+                                })
+                                // OR away_game_no == 1 AND away_score > home_score
+                                ->orWhere(function ($q2) {
+                                    $q2->where('away_game_no', 1)
+                                        ->whereColumn('away_score', '>', 'home_score');
+                                });
+                            })
+                            ->orderByDesc('created_at')
+                            ->get();
+                    }
+                } catch (\Exception $e) {
+                    $firstFrameWinners = collect();
+                }
+            @endphp
+
+            <div class="mt-4">
+
+
+                
+                @php
+                    // Aggregate wins per player from the $firstFrameWinners collection.
+                    $playerWins = [];
+                    foreach ($firstFrameWinners as $frame) {
+                        // Determine the winning player for this frame (we fetched only winning frames)
+                        $winner = null;
+                        if ($frame->home_game_no === 1 && $frame->home_score > $frame->away_score) {
+                            $winner = $frame->homePlayer;
+                        } elseif ($frame->away_game_no === 1 && $frame->away_score > $frame->home_score) {
+                            $winner = $frame->awayPlayer;
+                        }
+
+                        if (!$winner) {
+                            continue;
+                        }
+
+                        $pid = $winner->getKey();
+                        if (!isset($playerWins[$pid])) {
+                            $playerWins[$pid] = ['id' => $pid, 'name' => $winner->name ?? 'Unknown', 'wins' => 0];
+                        }
+                        $playerWins[$pid]['wins']++;
+                    }
+
+                    // Convert to collection and sort by wins desc
+                    $playerWins = collect($playerWins)->sortByDesc('wins')->values();
+                @endphp
+
+                <div class="mt-6">
+                    <h3 class="text-lg font-semibold mb-2">First-game winners summary</h3>
+                    @if($playerWins->isEmpty())
+                        <div class="text-gray-600">No players found for the first-game winner criteria.</div>
+                    @else
+                        <div class="overflow-x-auto bg-white border rounded">
+                            <table class="min-w-full text-left">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="px-3 py-2">Player</th>
+                                        <th class="px-3 py-2">Wins</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($playerWins as $p)
+                                        <tr class="border-t">
+                                            <td class="px-3 py-2">{{ $p['name'] }}</td>
+                                            <td class="px-3 py-2">{{ $p['wins'] }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
             </div>
         @endif
     </div>
