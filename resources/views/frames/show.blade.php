@@ -1,52 +1,53 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container mx-auto py-6">
-        <h1 class="text-2xl font-semibold mb-4">Frame {{ $frame->id }}</h1>
+    <div class="container mx-auto py-1">
 
-        <div class="bg-white border rounded p-6">
-            <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">Game</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ $frame->game->competition->name ?? '—' }}</dd>
-                </div>
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">Frame No</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ $frame->game_no }}</dd>
-                </div>
+        @if($frame->game)
+            <div class="mb-4 p-4 bg-gray-50 border rounded">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <div class="text-sm text-gray-600">
+                            {{ optional($frame->game->date)->format('j M Y') ?? 'TBA' }} · {{ $frame->game->competition->name ?? '—' }}
+                        </div>
+                         <div class="text-lg font-semibold">
+                            <a href="{{ route('games.show', $frame->game->getKey()) }}" class="text-blue-600 hover:underline">
+                                {{ $frame->game->homeTeam->name ?? $frame->game->homePlayer->name ?? '—' }} ({{ $frame->game->home_score ?? '-' }})
+                                <br>
+                                {{ $frame->game->awayTeam->name ?? $frame->game->awayPlayer->name ?? '—' }} ({{ $frame->game->away_score ?? '-' }})
+                            </a>
+                        </div>
+                                                @if(!empty($frame->game->homeTeam?->location))
+                            <div class="text-xs text-gray-500 mt-1">{{ $frame->game->homeTeam->location }}</div>
+                        @endif
+                    </div>
 
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">Home Player</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ $frame->homePlayer->name ?? '—' }}</dd>
                 </div>
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">Away Player</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ $frame->awayPlayer->name ?? '—' }}</dd>
-                </div>
+            </div>
+        @endif
 
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">Score</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ $frame->home_score ?? '-' }} — {{ $frame->away_score ?? '-' }}</dd>
-                </div>
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">8-ball Clear (Home)</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ $frame->eight_ball_clear_home ? 'Yes' : 'No' }}</dd>
-                </div>
+        <div class="bg-white border rounded p-4">
+            <p>Frame: {{ $frame->game_no }}</p>
+            <p>#{{ $frame->away_game_no }} {{ $frame->homePlayer->name ?? '—' }} ({{ $frame->home_score ?? '-' }}) @if($frame->eight_ball_clear_home)
+                                                <span title="8-ball clear (A)" aria-label="8-ball clear" class="inline-block">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-4 h-4 inline-block" role="img" aria-hidden="true">
+                                                        <title>8-ball</title>
+                                                        <circle cx="12" cy="12" r="10" fill="#000" />
+                                                        <text x="12" y="16" text-anchor="middle" font-size="12" fill="#fff" font-family="Arial, Helvetica, sans-serif">8</text>
+                                                    </svg>
+                                                </span>
+                                            @endif<br>
+                #{{ $frame->away_game_no }} {{ $frame->awayPlayer->name ?? '—' }} ({{ $frame->away_score ?? '-' }})  @if($frame->eight_ball_clear_away)
+                                                <span title="8-ball clear (B)" aria-label="8-ball clear" class="inline-block">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-4 h-4 inline-block" role="img" aria-hidden="true">
+                                                        <title>8-ball</title>
+                                                        <circle cx="12" cy="12" r="10" fill="#000" />
+                                                        <text x="12" y="16" text-anchor="middle" font-size="12" fill="#fff" font-family="Arial, Helvetica, sans-serif">8</text>
+                                                    </svg>
+                                                </span>
+                                            @endif</p>
 
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">8-ball Clear (Away)</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ $frame->eight_ball_clear_away ? 'Yes' : 'No' }}</dd>
-                </div>
 
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">Home Game No</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ $frame->home_game_no }}</dd>
-                </div>
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">Away Game No</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ $frame->away_game_no }}</dd>
-                </div>
-            </dl>
 
             <div class="mt-6 flex space-x-2">
                 <a href="{{ route('frames.edit', $frame) }}" class="px-3 py-2 bg-yellow-500 text-white rounded">Edit</a>
