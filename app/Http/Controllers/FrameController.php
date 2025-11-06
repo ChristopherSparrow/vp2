@@ -49,11 +49,29 @@ class FrameController extends Controller
                     $awayPlayersByGame[$g->id] = $awayTeam->players()->orderBy('name')->get()->map(function($p){ return ['id' => $p->id, 'name' => $p->name]; })->toArray();
                 }
             }
+            // Prepare empty player frame counts placeholder (we'll fill after loop)
+            
+        }
+
+        // Count how many frames each player has played in each game (home or away)
+        $playerFrameCountsByGame = [];
+        foreach ($games as $g) {
+            $counts = [];
+            $frames = $g->frames()->get(['home_player', 'away_player']);
+            foreach ($frames as $f) {
+                if ($f->home_player) {
+                    $counts[$f->home_player] = ($counts[$f->home_player] ?? 0) + 1;
+                }
+                if ($f->away_player) {
+                    $counts[$f->away_player] = ($counts[$f->away_player] ?? 0) + 1;
+                }
+            }
+            $playerFrameCountsByGame[$g->id] = $counts;
         }
 
         $players = Player::orderBy('name')->get();
 
-        return view('frames.create', compact('games', 'players', 'gameNextNumbers', 'homePlayersByGame', 'awayPlayersByGame'));
+    return view('frames.create', compact('games', 'players', 'gameNextNumbers', 'homePlayersByGame', 'awayPlayersByGame', 'playerFrameCountsByGame'));
     }
 
     public function store(Request $request)
@@ -132,7 +150,23 @@ class FrameController extends Controller
             }
         }
 
-        return view('frames.edit', compact('frame', 'games', 'players', 'gameNextNumbers', 'homePlayersByGame', 'awayPlayersByGame'));
+        // Count how many frames each player has played in each game (home or away)
+        $playerFrameCountsByGame = [];
+        foreach ($games as $g) {
+            $counts = [];
+            $frames = $g->frames()->get(['home_player', 'away_player']);
+            foreach ($frames as $f) {
+                if ($f->home_player) {
+                    $counts[$f->home_player] = ($counts[$f->home_player] ?? 0) + 1;
+                }
+                if ($f->away_player) {
+                    $counts[$f->away_player] = ($counts[$f->away_player] ?? 0) + 1;
+                }
+            }
+            $playerFrameCountsByGame[$g->id] = $counts;
+        }
+
+        return view('frames.edit', compact('frame', 'games', 'players', 'gameNextNumbers', 'homePlayersByGame', 'awayPlayersByGame', 'playerFrameCountsByGame'));
     }
 
     public function update(Request $request, Frame $frame)
