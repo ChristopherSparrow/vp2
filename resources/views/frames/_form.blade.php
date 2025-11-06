@@ -135,6 +135,9 @@
             const homePlayersByGame = {!! json_encode($homePlayersByGame ?? []) !!};
             const awayPlayersByGame = {!! json_encode($awayPlayersByGame ?? []) !!};
             const playerFrameCounts = {!! json_encode($playerFrameCountsByGame ?? []) !!};
+            // preserve currently selected player ids when editing — populated server-side then JS replaces options
+            const initialHomeSelected = {!! json_encode($values['home_player'] ?? '') !!};
+            const initialAwaySelected = {!! json_encode($values['away_player'] ?? '') !!};
 
             const select = document.querySelector('select[name="game_id"]');
             const input = document.getElementById('game_no_input');
@@ -151,7 +154,7 @@
                 }
             }
 
-            function populatePlayersForGame(gid) {
+            function populatePlayersForGame(gid, initial=false) {
                 // populate home
                 if (homeSelect) {
                     homeSelect.innerHTML = '<option value="">--</option>';
@@ -160,6 +163,10 @@
                         const opt = document.createElement('option');
                         opt.value = p.id;
                         opt.textContent = p.name;
+                        // if this is the initial populate, try to re-select the frame's current home player
+                        if (initial && initialHomeSelected && String(p.id) === String(initialHomeSelected)) {
+                            opt.selected = true;
+                        }
                         homeSelect.appendChild(opt);
                     });
                 }
@@ -171,6 +178,9 @@
                         const opt = document.createElement('option');
                         opt.value = p.id;
                         opt.textContent = p.name;
+                        if (initial && initialAwaySelected && String(p.id) === String(initialAwaySelected)) {
+                            opt.selected = true;
+                        }
                         awaySelect.appendChild(opt);
                     });
                 }
@@ -189,8 +199,23 @@
 
             document.addEventListener('DOMContentLoaded', function(){
                 setNextForSelected();
-                // populate for initial selection
-                if (select && select.value) populatePlayersForGame(select.value);
+                // populate for initial selection (preserve current selection)
+                if (select && select.value) {
+                    // If the server already rendered player options (options length > 1), avoid re-populating
+                    const homeAlready = homeSelect && homeSelect.options && homeSelect.options.length > 1;
+                    const awayAlready = awaySelect && awaySelect.options && awaySelect.options.length > 1;
+                    if (!homeAlready && !awayAlready) {
+                        populatePlayersForGame(select.value, true);
+                    } else {
+                        // server-side rendered options exist — ensure the correct option is selected
+                        if (homeSelect && initialHomeSelected) {
+                            Array.from(homeSelect.options).forEach(function(o){ if (String(o.value) === String(initialHomeSelected)) o.selected = true; });
+                        }
+                        if (awaySelect && initialAwaySelected) {
+                            Array.from(awaySelect.options).forEach(function(o){ if (String(o.value) === String(initialAwaySelected)) o.selected = true; });
+                        }
+                    }
+                }
                 // also set home/away player game numbers for any initial selection
                 const gidInit = select ? select.value : null;
                 if (gidInit) {
@@ -211,7 +236,7 @@
                 } else {
                     input.value = 1;
                 }
-                populatePlayersForGame(gid);
+                populatePlayersForGame(gid, false);
                 // update per-player game numbers after changing game
                 const hIn = document.querySelector('input[name="home_game_no"]');
                 const aIn = document.querySelector('input[name="away_game_no"]');
