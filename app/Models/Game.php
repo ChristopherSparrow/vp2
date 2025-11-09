@@ -74,4 +74,68 @@ class Game extends Model
     {
         return $this->hasMany(Frame::class, 'game_id');
     }
+
+    /**
+     * Return frames ordered by game_no (query builder).
+     */
+    public function orderedFrames()
+    {
+        return $this->frames()->orderBy('game_no');
+    }
+
+    /**
+     * Return a collection of ordered frames with per-frame appearance numbers for
+     * the players. This computes, for each frame, how many times the player has
+     * appeared (in either home or away) up to and including that frame. The
+     * resulting Frame models will have dynamic properties added:
+     * - home_appearance_number
+     * - away_appearance_number
+     *
+     * This keeps presentation logic out of the Blade view.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function framesWithAppearanceNumbers()
+    {
+        $frames = $this->orderedFrames()->get();
+
+        $appearance = []; // player_id => count
+
+        foreach ($frames as $frame) {
+            // gather unique players in this frame to avoid double-counting
+            $playersThisFrame = [];
+            if ($frame->home_player) {
+                $playersThisFrame[$frame->home_player] = 'home';
+            }
+            if ($frame->away_player) {
+                // If the same player appears both sides, keep both roles but only count once
+                $playersThisFrame[$frame->away_player] = isset($playersThisFrame[$frame->away_player])
+                    ? $playersThisFrame[$frame->away_player] . '|away'
+                    : 'away';
+            }
+
+            // For each unique player appearing in this frame, increment their counter
+            foreach ($playersThisFrame as $pid => $roles) {
+                if (! isset($appearance[$pid])) {
+                    $appearance[$pid] = 0;
+                }
+                $appearance[$pid]++;
+            }
+
+            // Attach appearance numbers to the frame for the specific roles
+            if ($frame->home_player) {
+                $frame->home_appearance_number = $appearance[$frame->home_player] ?? 0;
+            } else {
+                $frame->home_appearance_number = 0;
+            }
+
+            if ($frame->away_player) {
+                $frame->away_appearance_number = $appearance[$frame->away_player] ?? 0;
+            } else {
+                $frame->away_appearance_number = 0;
+            }
+        }
+
+        return $frames;
+    }
 }

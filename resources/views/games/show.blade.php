@@ -7,19 +7,19 @@
         <div class="border rounded-lg p-4 shadow-sm bg-white">
             <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="text-lg font-semibold"></h2>{{ $game->competition->name ?? '—' }}</h2>
-                    <p class="text-sm text-gray-600">{{ optional($game->date)->format('F j, Y g:ia') ?? '—' }}</p>
+                    <h2 class="text-xl font-bold mb-3">{{ $game->competition->name ?? '—' }}</h2>
+                    <p class="text-gray-600">{{ optional($game->date)->format('F j, Y') ?? '—' }}</p>
                 </div>
             </div>
             <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="bg-gray-50 p-3 rounded">
-                    <div class="font-medium flex items-center justify-between">
+                    <div class="font-bold flex items-center justify-between">
                         <span>{{ $game->homeTeam->name ?? $game->homePlayer->name ?? '—' }}</span>
                         <span class="text-xl font-bold text-right">{{ $game->home_score ?? '—' }}</span>
                     </div>
                 </div>
                 <div class="bg-gray-50 p-3 rounded">  
-                    <div class="font-medium flex items-center justify-between">
+                    <div class="font-bold flex items-center justify-between">
                         <span>{{ $game->awayTeam->name ?? $game->awayPlayer->name ?? '—' }}</span>
                         <span class="text-xl font-bold text-right">{{ $game->away_score ?? '—' }}</span>
                     </div>
@@ -31,16 +31,7 @@
             <div>
                 <h2 class="text-xl font-bold mb-3">Frames</h2>
 
-                @php
-                    // If frames are preloaded, use them; otherwise fetch ordered by game_no
-                    if ($game->relationLoaded('frames')) {
-                        $frames = $game->frames->sortBy('game_no');
-                    } else {
-                        $frames = $game->frames()->orderBy('game_no')->get();
-                    }
-                @endphp
-
-                @if($frames->isEmpty())
+                @if(empty($frames) || $frames->isEmpty())
                     <p class="text-gray-600">No frames for this game.</p>
                 @else
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -49,19 +40,11 @@
                                 <div class="flex items-start justify-between">
                                     <div>
                                         <div class="text-xs text-gray-500">Frame {{ $frame->game_no ?? '—' }}</div>
-                                            <div class="font-medium flex items-center space-x-2">
+                                            <div class="flex items-center space-x-2">
 
 
-                                            @php
-                                                $homeCount = 0;
-                                                if ($frame->homePlayer) {
-                                                    $pid = $frame->home_player;
-                                                    $homeCount = $frames->filter(function($fr) use ($pid, $frame) {
-                                                        return (($fr->home_player == $pid) || ($fr->away_player == $pid)) && ($fr->game_no <= $frame->game_no);
-                                                    })->count();
-                                                }
-                                            @endphp
-                                            <span>{{ $frame->homePlayer->name ?? '—' }} <span class="text-xs text-gray-500">#{{ $homeCount }}</span> ({{ $frame->home_score ?? '-' }})</span>
+                                            <span class="text-xs text-gray-500">#{{ $frame->home_appearance_number ?? 0 }}</span>
+                                            <span class="{{ (isset($frame->home_score) && isset($frame->away_score) && $frame->home_score > $frame->away_score) ? 'font-bold' : '' }}">{{ $frame->homePlayer->name ?? '—' }} ({{ $frame->home_score ?? '-' }})</span>
                                             @if($frame->eight_ball_clear_home)
                                                 <span title="8-ball clear (A)" aria-label="8-ball clear" class="inline-block">
                                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-4 h-4 inline-block" role="img" aria-hidden="true">
@@ -72,17 +55,9 @@
                                                 </span>
                                             @endif
                                         </div>
-                                        <div class="font-medium flex items-center space-x-2">
-                                            @php
-                                                $awayCount = 0;
-                                                if ($frame->awayPlayer) {
-                                                    $apid = $frame->away_player;
-                                                    $awayCount = $frames->filter(function($fr) use ($apid, $frame) {
-                                                        return (($fr->home_player == $apid) || ($fr->away_player == $apid)) && ($fr->game_no <= $frame->game_no);
-                                                    })->count();
-                                                }
-                                            @endphp
-                                            <span>{{ $frame->awayPlayer->name ?? '—' }} <span class="text-xs text-gray-500">#{{ $awayCount }}</span> ({{ $frame->away_score ?? '-' }})</span>
+                                        <div class="flex items-center space-x-2">
+                                            <span class="text-xs text-gray-500">#{{ $frame->away_appearance_number ?? 0 }}</span>
+                                            <span class="{{ (isset($frame->home_score) && isset($frame->away_score) && $frame->away_score > $frame->home_score) ? 'font-bold' : '' }}">{{ $frame->awayPlayer->name ?? '—' }}  ({{ $frame->away_score ?? '-' }})</span>
                                             @if($frame->eight_ball_clear_away)
                                                 <span title="8-ball clear (A)" aria-label="8-ball clear" class="inline-block">
                                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-4 h-4 inline-block" role="img" aria-hidden="true">
@@ -94,7 +69,7 @@
                                             @endif
                                         </div>
                                     </div>
-                                    <div class="text-right text-sm">
+                                    <div class="text-right font-bold">
 
                                         <div class="mt-2">
                                             <a href="{{ route('frames.show', $frame) }}" class="text-green-600">View</a>

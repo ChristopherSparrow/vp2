@@ -93,8 +93,13 @@ class GameController extends Controller
 
     public function show(Game $game)
     {
+        // Load relationships used by the show view and prepare ordered frames
         $game->load(['competition', 'homeTeam', 'awayTeam', 'homePlayer', 'awayPlayer']);
-        return view('games.show', compact('game'));
+
+        // Compute frames with appearance numbers to keep view logic minimal
+        $frames = $game->framesWithAppearanceNumbers();
+
+        return view('games.show', compact('game', 'frames'));
     }
 
     public function edit(Game $game)
