@@ -2,6 +2,7 @@
 
 @section('content')
 <div class="container mx-auto py-0">
+    {{-- Styles moved to `resources/css/app.css` (details marker hiding, chevron rotation, responsive behavior) --}}
     <h1 class="text-2xl font-bold mb-4">{{ $competition->name }}</h1>
 
     @php
@@ -35,11 +36,18 @@
         @if($games->isEmpty())
             <div class="text-gray-600">No fixtures for this competition.</div>
         @else
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             @if(!empty($standings) && $competition->type === 'team_league')
                 <div class="mb-6">
-                    <h2 class="text-xl font-bold mb-3">League Standings</h2>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full bg-white border">
+                    <details class="section-panel details-no-marker rounded border bg-white" open>
+                        <summary class="px-4 py-2 font-semibold cursor-pointer flex items-center justify-between">
+                            <span class="text-xl font-bold">League Standings</span>
+                            <svg class="chev w-4 h-4 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </summary>
+                        <div class="p-4 overflow-x-auto">
+                            <table class="min-w-full bg-white border">
                             <thead>
                                 <tr class="bg-gray-100 text-left">
                                     <th class="px-3 py-2">Team</th>
@@ -62,14 +70,21 @@
                                     </tr>
                                 @endforeach
                             </tbody>
-                        </table>
-                    </div>
+                            </table>
+                        </div>
+                    </details>
                 </div>
             @endif
-            <h2 class="text-xl font-bold mb-3">Fixtures & Results</h2>
-            <div class="mt-4 space-y-3">
+            <details class="section-panel details-no-marker mb-4 rounded border bg-white" open>
+                <summary class="px-4 py-2 font-semibold cursor-pointer flex items-center justify-between">
+                    <span class="text-xl font-bold">Fixtures & Results</span>
+                    <svg class="chev w-4 h-4 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </summary>
+                <div class="p-4 mt-4 space-y-3">
                 @foreach($games->groupBy(fn($g) => $g->date?->format('Y-m-d') ?? 'TBA') as $date => $dayGames)
-                    <details class="border rounded bg-gray-50">
+                    <details class="details-no-marker border rounded bg-gray-50">
                         <summary class="px-4 py-2 font-semibold cursor-pointer flex items-center justify-between">
                             <span>
                                 @if($date === 'TBA')
@@ -115,8 +130,15 @@
                         </div>
                     </details>
                 @endforeach
-            </div>
-            <h2 class="text-xl font-bold mb-3">Statistics</h2>
+                </div>
+            </details>
+            <details class="section-panel details-no-marker mb-6 rounded border bg-white" open>
+                <summary class="px-4 py-2 font-semibold cursor-pointer flex items-center justify-between">
+                    <span class="text-xl font-bold">Statistics</span>
+                    <svg class="chev w-4 h-4 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </summary>
 
             @php
                 // Determine the season to use: prefer the current season if available,
@@ -153,7 +175,7 @@
                 }
             @endphp
 
-            <div class="mt-4">
+            <div class="p-4 mt-4">
 
 
                 
@@ -209,6 +231,7 @@
                         </div>
                     @endif
                 </div>
+            </details>
             </div>
         @endif
     </div>

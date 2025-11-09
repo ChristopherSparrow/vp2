@@ -1,0 +1,25 @@
+/* Competition-specific component styles moved out of app.css
+   - hide native details marker
+   - chevron rotation
+   - section-panel responsive behaviour: hide summary from md and force content visible
+*/
+@layer components {
+    /* hide default triangle/marker across browsers */
+    .details-no-marker summary::-webkit-details-marker { display: none; }
+    .details-no-marker summary::marker { content: none; }
+
+    /* chevron rotation helper */
+    .chev { @apply transition-transform duration-150; }
+    details[open] .chev { transform: rotate(180deg); }
+
+    /* section-panel: on md+ hide the summary and force the immediate content visible */
+    .section-panel > summary { @apply block; }
+    @screen md {
+        .section-panel > summary { display: none; }
+        /* on larger screens treat panels as expanded: always show content and hide the chevron */
+        .section-panel > div { display: block !important; }
+        .chev { display: none; }
+        /* optionally disable pointer events on details so there's no dropdown interaction */
+        details.section-panel { pointer-events: none; }
+    }
+}
