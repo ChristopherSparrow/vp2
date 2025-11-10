@@ -92,13 +92,13 @@
 
                                                     <td class="px-3 py-2 break-words">
                                                         @if($game->homeTeam)
-                                                            {{ $game->homeTeam->name }}
+                                                            <a href="{{ route('teams.show', $game->homeTeam->getKey()) }}" class="text-indigo-600 hover:underline">{{ $game->homeTeam->name }}</a>
                                                         @else
                                                             {{ $game->homePlayer?->name ?? '—' }}
                                                         @endif
                                                     <br>
                                                         @if($game->awayTeam)
-                                                            {{ $game->awayTeam->name }}
+                                                            <a href="{{ route('teams.show', $game->awayTeam->getKey()) }}" class="text-indigo-600 hover:underline">{{ $game->awayTeam->name }}</a>
                                                         @else
                                                             {{ $game->awayPlayer?->name ?? '—' }}
                                                         @endif
@@ -145,7 +145,9 @@
                             <tbody>
                                 @foreach($standings as $i => $row)
                                     <tr class="border-t">
-                                        <td class="px-2 py-2">{{ $row['name'] }}</td>
+                                        <td class="px-2 py-2">
+                                            <a href="{{ route('teams.show', $row['team_id']) }}" class="text-indigo-600 hover:underline">{{ $row['name'] }}</a>
+                                        </td>
                                         <td class="px-2 py-2 text-right">{{ $row['played'] }}</td>
                                         <td class="px-2 py-2 text-right">{{ $row['for'] }}</td>
                                         </tr>

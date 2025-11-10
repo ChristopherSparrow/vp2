@@ -117,8 +117,11 @@ Route::get('/', function () {
         unset($row);
 
         usort($standings, function ($a, $b) {
+            // Primary sort: goals-for (the 'for' column)
+            if ($a['for'] !== $b['for']) return $b['for'] <=> $a['for'];
+
+            // Tie-breakers: points, then wins, then fewer played
             if ($a['points'] !== $b['points']) return $b['points'] <=> $a['points'];
-            if ($a['goal_diff'] !== $b['goal_diff']) return $b['goal_diff'] <=> $a['goal_diff'];
             if ($a['wins'] !== $b['wins']) return $b['wins'] <=> $a['wins'];
             return $a['played'] <=> $b['played'];
         });
