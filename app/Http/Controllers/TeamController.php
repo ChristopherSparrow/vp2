@@ -48,7 +48,46 @@ class TeamController extends Controller
     public function show(Team $team)
     {
         $team->load('season');
-        return view('teams.show', compact('team'));
+
+        // Load player_team records for this team filtered to the team's season when available
+        if ($team->season) {
+            $seasonStart = $team->season->start_date;
+            $seasonEnd = $team->season->end_date;
+
+            // Overlap logic: (start_date is null or start_date <= seasonEnd) AND (end_date is null or end_date >= seasonStart)
+            $playerTeams = $team->playerTeams()
+                ->where(function ($q) use ($seasonEnd) {
+                    $q->whereNull('start_date')
+                      ->orWhereDate('start_date', '<=', $seasonEnd);
+                })
+                ->where(function ($q) use ($seasonStart) {
+                    $q->whereNull('end_date')
+                      ->orWhereDate('end_date', '>=', $seasonStart);
+                })
+                ->with('player')
+                ->get();
+        } else {
+            $playerTeams = $team->playerTeams()->with('player')->get();
+        }
+
+        // Load all games for this team (home or away) so the view can show fixtures and results
+        $gameQuery = \App\Models\Game::with(['competition', 'homeTeam', 'awayTeam', 'homePlayer', 'awayPlayer'])
+            ->where(function ($q) use ($team) {
+                $q->where('home_team_id', $team->getKey())
+                  ->orWhere('away_team_id', $team->getKey());
+            });
+
+        // If the team belongs to a season, limit games to competitions in that season
+        if ($team->season_id) {
+            $seasonId = $team->season_id;
+            $gameQuery->whereHas('competition', function ($q) use ($seasonId) {
+                $q->where('season_id', $seasonId);
+            });
+        }
+
+        $fixtures = $gameQuery->orderBy('date')->get();
+
+        return view('teams.show', compact('team', 'fixtures', 'playerTeams'));
     }
 
     /** Show the form for editing the specified team. */
