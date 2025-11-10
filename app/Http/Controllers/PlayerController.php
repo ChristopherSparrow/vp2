@@ -67,7 +67,76 @@ class PlayerController extends Controller
     /** Display the specified player. */
     public function show(Player $player)
     {
-        return view('players.show', compact('player'));
+        // Load frames the player has appeared in (either home or away), with related game and player info.
+        $frames = \App\Models\Frame::with(['game.competition', 'game.homeTeam', 'game.awayTeam', 'homePlayer', 'awayPlayer'])
+            ->where(function ($q) use ($player) {
+                $q->where('home_player', $player->id)
+                  ->orWhere('away_player', $player->id);
+            })
+            ->get()
+            // group frames by their game id so the view can present frames per game
+            ->groupBy(function ($frame) {
+                return $frame->game_id ?? 'no_game';
+            })
+            ->map(function ($group) {
+                // ensure frames in a game are ordered by game_no
+                return $group->sortBy('game_no')->values();
+            });
+
+        // Compute league frames win percentage. "League" frames are those where the
+        // frame's game has a competition with type 'team_league'. Only consider frames
+        // with non-null scores.
+        $leagueFrames = $frames->flatten(1)->filter(function ($frame) {
+            return $frame->game && $frame->game->competition && ($frame->game->competition->type === 'team_league');
+        });
+
+        $totalLeagueFramesWithScore = $leagueFrames->filter(function ($frame) {
+            return $frame->home_score !== null || $frame->away_score !== null;
+        })->count();
+
+        $leagueFramesWon = $leagueFrames->filter(function ($frame) use ($player) {
+            if ($frame->home_score === null && $frame->away_score === null) return false;
+
+            if ($frame->home_player === $player->id) {
+                return $frame->home_score > $frame->away_score;
+            }
+
+            if ($frame->away_player === $player->id) {
+                return $frame->away_score > $frame->home_score;
+            }
+
+            return false;
+        })->count();
+
+        $leagueWinPct = $totalLeagueFramesWithScore > 0
+            ? round(($leagueFramesWon / $totalLeagueFramesWithScore) * 100, 1)
+            : null;
+
+        // Find cup games the player is involved in. Cup types are competitions with
+        // type in the known cup types. A player is involved if:
+        // - they are the home_indiv_id or away_indiv_id (individual/pairs cups), or
+        // - one of their teams (from the player-team pivot) is the home_team_id or away_team_id (team cups).
+        $cupTypes = ['team_cup', 'individ_cup', 'pairs_cup'];
+
+        $teamIds = $player->teams()->pluck('teams.id')->all();
+
+        $cupGames = \App\Models\Game::with(['competition', 'homeTeam', 'awayTeam', 'homePlayer', 'awayPlayer'])
+            ->whereHas('competition', function ($q) use ($cupTypes) {
+                $q->whereIn('type', $cupTypes);
+            })
+            ->where(function ($q) use ($player, $teamIds) {
+                $q->where('home_indiv_id', $player->id)
+                  ->orWhere('away_indiv_id', $player->id);
+
+                if (!empty($teamIds)) {
+                    $q->orWhereIn('home_team_id', $teamIds)
+                      ->orWhereIn('away_team_id', $teamIds);
+                }
+            })
+            ->orderBy('date', 'desc')
+            ->get();
+
+        return view('players.show', ['player' => $player, 'groupedFrames' => $frames, 'leagueWinPct' => $leagueWinPct, 'leagueFramesWon' => $leagueFramesWon, 'leagueFramesTotal' => $totalLeagueFramesWithScore, 'cupGames' => $cupGames]);
     }
 
     /** Show the form for editing the specified player. */
